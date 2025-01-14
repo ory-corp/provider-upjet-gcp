@@ -1,9 +1,0 @@
-# SPDX-FileCopyrightText: 2024 The Crossplane Authors <https://crossplane.io>
-#
-# SPDX-License-Identifier: Apache-2.0
-
-apiVersion: providers.upbound.io
-kind: SplitTransformer
-metadata:
-  name: splitter
-argsOneLiner: ../crds
