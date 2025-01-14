@@ -373,7 +373,7 @@ resources:
   - ./crds/workflows.gcp.upbound.io_workflows.yaml
 
 patches:
-- path: ./webhook.yaml
+- path: ./kustomize/webhook.yaml
   target:
     group: apiextensions.k8s.io
     kind: CustomResourceDefinition
