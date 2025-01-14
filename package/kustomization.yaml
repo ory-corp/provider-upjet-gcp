@@ -364,7 +364,6 @@ resources:
   - ./crds/tags.gcp.upbound.io_tagbindings.yaml
   - ./crds/tags.gcp.upbound.io_tagkeys.yaml
   - ./crds/tags.gcp.upbound.io_tagvalues.yaml
-  - ./crds/tmp.txt
   - ./crds/tpu.gcp.upbound.io_nodes.yaml
   - ./crds/vertexai.gcp.upbound.io_datasets.yaml
   - ./crds/vertexai.gcp.upbound.io_featurestoreentitytypes.yaml
