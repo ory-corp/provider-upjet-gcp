@@ -372,8 +372,8 @@ resources:
   - ./crds/vpcaccess.gcp.upbound.io_connectors.yaml
   - ./crds/workflows.gcp.upbound.io_workflows.yaml
 
-patches:
-- path: ./kustomize/webhook.yaml
-  target:
-    group: apiextensions.k8s.io
-    kind: CustomResourceDefinition
+# patches:
+# - path: ./kustomize/webhook.yaml
+#   target:
+#     group: apiextensions.k8s.io
+#     kind: CustomResourceDefinition
