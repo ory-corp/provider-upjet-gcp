@@ -229,7 +229,6 @@ resources:
   - ./crds/dataproc.gcp.upbound.io_jobs.yaml
   - ./crds/dataproc.gcp.upbound.io_metastoreservices.yaml
   - ./crds/dataproc.gcp.upbound.io_workflowtemplates.yaml
-  - ./crds/datastore.gcp.upbound.io_indices.yaml
   - ./crds/datastream.gcp.upbound.io_connectionprofiles.yaml
   - ./crds/datastream.gcp.upbound.io_privateconnections.yaml
   - ./crds/dialogflowcx.gcp.upbound.io_agents.yaml
@@ -258,7 +257,6 @@ resources:
   - ./crds/firebaserules.gcp.upbound.io_rulesets.yaml
   - ./crds/gcp.upbound.io_providerconfigs.yaml
   - ./crds/gcp.upbound.io_providerconfigusages.yaml
-  - ./crds/gcp.upbound.io_storeconfigs.yaml
   - ./crds/gke.gcp.upbound.io_backupbackupplans.yaml
   - ./crds/gkehub.gcp.upbound.io_membershipiammembers.yaml
   - ./crds/gkehub.gcp.upbound.io_memberships.yaml
@@ -277,7 +275,6 @@ resources:
   - ./crds/identityplatform.gcp.upbound.io_defaultsupportedidpconfigs.yaml
   - ./crds/identityplatform.gcp.upbound.io_inboundsamlconfigs.yaml
   - ./crds/identityplatform.gcp.upbound.io_oauthidpconfigs.yaml
-  - ./crds/identityplatform.gcp.upbound.io_projectdefaultconfigs.yaml
   - ./crds/identityplatform.gcp.upbound.io_tenantdefaultsupportedidpconfigs.yaml
   - ./crds/identityplatform.gcp.upbound.io_tenantinboundsamlconfigs.yaml
   - ./crds/identityplatform.gcp.upbound.io_tenantoauthidpconfigs.yaml
