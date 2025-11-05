@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.18.0
   name: tables.bigquery.gcp.upbound.io
 spec:
   group: bigquery.gcp.upbound.io
@@ -73,12 +73,32 @@ spec:
                 type: string
               forProvider:
                 properties:
-                  allowResourceTagsOnDeletion:
-                    description: |-
-                      If set to true, it allows table
-                      deletion when there are still resource tags attached. The default value is
-                      false.
-                    type: boolean
+                  biglakeConfiguration:
+                    description: Specifies the configuration of a BigLake managed
+                      table. Structure is documented below
+                    items:
+                      properties:
+                        connectionId:
+                          description: |-
+                            The connection specifying the credentials to be used to
+                            read and write to external storage, such as Cloud Storage. The connection_id can
+                            have the form "<project_id>.<location_id>.<connection_id>" or
+                            projects/<project_id>/locations/<location_id>/connections/<connection_id>".
+                          type: string
+                        fileFormat:
+                          description: The file format the table data is stored in.
+                          type: string
+                        storageUri:
+                          description: |-
+                            The fully qualified location prefix of the external folder where table data
+                            is stored. The '*' wildcard character is not allowed. The URI should be in the format "gs://bucket/path_to_table/"
+                          type: string
+                        tableFormat:
+                          description: The table format the metadata only snapshots
+                            are stored in.
+                          type: string
+                      type: object
+                    type: array
                   clustering:
                     description: |-
                       Specifies column names to use for data clustering.
@@ -197,6 +217,84 @@ spec:
                       indefinitely. Expired tables will be deleted and their storage
                       reclaimed.
                     type: number
+                  externalCatalogTableOptions:
+                    description: |-
+                      Options defining open source
+                      compatible table. Structure is documented below.
+                    items:
+                      properties:
+                        connectionId:
+                          description: |-
+                            The connection specifying the credentials to be
+                            used to read external storage, such as Azure Blob, Cloud Storage, or S3. The
+                            connection is needed to read the open source table from BigQuery Engine. The
+                            connection_id can have the form <project_id>.<location_id>.<connection_id>
+                            or projects/<project_id>/locations/<location_id>/connections/<connection_id>.
+                          type: string
+                        parameters:
+                          additionalProperties:
+                            type: string
+                          description: |-
+                            A map of key value pairs defining the parameters and
+                            properties of the open source table. Corresponds with hive meta store table
+                            parameters. Maximum size of 4Mib.
+                          type: object
+                          x-kubernetes-map-type: granular
+                        storageDescriptor:
+                          description: |-
+                            A storage descriptor containing information
+                            about the physical storage of this table. Structure is documented below.
+                          items:
+                            properties:
+                              inputFormat:
+                                description: |-
+                                  Specifies the fully qualified class name of the
+                                  InputFormat (e.g. "org.apache.hadoop.hive.ql.io.orc.OrcInputFormat"). The
+                                  maximum length is 128 characters.
+                                type: string
+                              locationUri:
+                                description: |-
+                                  The physical location of the table (e.g.
+                                  'gs://spark-dataproc-data/pangea-data/case_sensitive/' or
+                                  'gs://spark-dataproc-data/pangea-data/*'). The maximum length is 2056 bytes.
+                                type: string
+                              outputFormat:
+                                description: |-
+                                  Specifies the fully qualified class name of the
+                                  OutputFormat (e.g. "org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat"). The
+                                  maximum length is 128 characters.
+                                type: string
+                              serdeInfo:
+                                description: |-
+                                  Serializer and deserializer information. Structure
+                                  is documented below.
+                                items:
+                                  properties:
+                                    name:
+                                      description: Name of the SerDe. The maximum
+                                        length is 256 characters.
+                                      type: string
+                                    parameters:
+                                      additionalProperties:
+                                        type: string
+                                      description: |-
+                                        Key-value pairs that define the initialization
+                                        parameters for the serialization library. Maximum size 10 Kib.
+                                      type: object
+                                      x-kubernetes-map-type: granular
+                                    serializationLibrary:
+                                      description: |-
+                                        Specifies a fully-qualified class name of
+                                        the serialization library that is responsible for the translation of data
+                                        between table representation and the underlying low-level input and output
+                                        format structures. The maximum length is 256 characters.
+                                      type: string
+                                  type: object
+                                type: array
+                            type: object
+                          type: array
+                      type: object
+                    type: array
                   externalDataConfiguration:
                     description: |-
                       Describes the data format,
@@ -553,6 +651,17 @@ spec:
                   friendlyName:
                     description: A descriptive name for the table.
                     type: string
+                  ignoreAutoGeneratedSchema:
+                    description: g. hive partitioned columns) in schema from showing
+                      diff.
+                    type: boolean
+                  ignoreSchemaChanges:
+                    description: |-
+                      A list of fields which should be ignored for each column in schema.
+                      NOTE: Right now only dataPolicies field is supported. We might support others in the future.
+                    items:
+                      type: string
+                    type: array
                   labels:
                     additionalProperties:
                       type: string
@@ -647,6 +756,19 @@ spec:
                   schema:
                     description: A JSON schema for the table.
                     type: string
+                  schemaForeignTypeInfo:
+                    description: |-
+                      Specifies metadata of the foreign data
+                      type definition in field schema. Structure is documented below.
+                    items:
+                      properties:
+                        typeSystem:
+                          description: |-
+                            Specifies the system which defines the foreign data
+                            type.
+                          type: string
+                      type: object
+                    type: array
                   tableConstraints:
                     description: |-
                       Defines the primary key and foreign keys.
@@ -725,6 +847,11 @@ spec:
                           type: array
                       type: object
                     type: array
+                  tableMetadataView:
+                    description: |-
+                      If specified, configures this table as a view.
+                      Structure is documented below.
+                    type: string
                   tableReplicationInfo:
                     description: |-
                       Replication info of a table created
@@ -796,6 +923,8 @@ spec:
                           description: |-
                             Specifies whether to use BigQuery's legacy SQL for this view.
                             The default value is true. If set to false, the view will use BigQuery's standard SQL.
+                            -> Note: Starting in provider version 7.0.0, no default value is
+                            provided for this field unless explicitly set in the configuration.
                           type: boolean
                       type: object
                     type: array
@@ -813,12 +942,32 @@ spec:
                   for example because of an external controller is managing them, like an
                   autoscaler.
                 properties:
-                  allowResourceTagsOnDeletion:
-                    description: |-
-                      If set to true, it allows table
-                      deletion when there are still resource tags attached. The default value is
-                      false.
-                    type: boolean
+                  biglakeConfiguration:
+                    description: Specifies the configuration of a BigLake managed
+                      table. Structure is documented below
+                    items:
+                      properties:
+                        connectionId:
+                          description: |-
+                            The connection specifying the credentials to be used to
+                            read and write to external storage, such as Cloud Storage. The connection_id can
+                            have the form "<project_id>.<location_id>.<connection_id>" or
+                            projects/<project_id>/locations/<location_id>/connections/<connection_id>".
+                          type: string
+                        fileFormat:
+                          description: The file format the table data is stored in.
+                          type: string
+                        storageUri:
+                          description: |-
+                            The fully qualified location prefix of the external folder where table data
+                            is stored. The '*' wildcard character is not allowed. The URI should be in the format "gs://bucket/path_to_table/"
+                          type: string
+                        tableFormat:
+                          description: The table format the metadata only snapshots
+                            are stored in.
+                          type: string
+                      type: object
+                    type: array
                   clustering:
                     description: |-
                       Specifies column names to use for data clustering.
@@ -858,6 +1007,84 @@ spec:
                       indefinitely. Expired tables will be deleted and their storage
                       reclaimed.
                     type: number
+                  externalCatalogTableOptions:
+                    description: |-
+                      Options defining open source
+                      compatible table. Structure is documented below.
+                    items:
+                      properties:
+                        connectionId:
+                          description: |-
+                            The connection specifying the credentials to be
+                            used to read external storage, such as Azure Blob, Cloud Storage, or S3. The
+                            connection is needed to read the open source table from BigQuery Engine. The
+                            connection_id can have the form <project_id>.<location_id>.<connection_id>
+                            or projects/<project_id>/locations/<location_id>/connections/<connection_id>.
+                          type: string
+                        parameters:
+                          additionalProperties:
+                            type: string
+                          description: |-
+                            A map of key value pairs defining the parameters and
+                            properties of the open source table. Corresponds with hive meta store table
+                            parameters. Maximum size of 4Mib.
+                          type: object
+                          x-kubernetes-map-type: granular
+                        storageDescriptor:
+                          description: |-
+                            A storage descriptor containing information
+                            about the physical storage of this table. Structure is documented below.
+                          items:
+                            properties:
+                              inputFormat:
+                                description: |-
+                                  Specifies the fully qualified class name of the
+                                  InputFormat (e.g. "org.apache.hadoop.hive.ql.io.orc.OrcInputFormat"). The
+                                  maximum length is 128 characters.
+                                type: string
+                              locationUri:
+                                description: |-
+                                  The physical location of the table (e.g.
+                                  'gs://spark-dataproc-data/pangea-data/case_sensitive/' or
+                                  'gs://spark-dataproc-data/pangea-data/*'). The maximum length is 2056 bytes.
+                                type: string
+                              outputFormat:
+                                description: |-
+                                  Specifies the fully qualified class name of the
+                                  OutputFormat (e.g. "org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat"). The
+                                  maximum length is 128 characters.
+                                type: string
+                              serdeInfo:
+                                description: |-
+                                  Serializer and deserializer information. Structure
+                                  is documented below.
+                                items:
+                                  properties:
+                                    name:
+                                      description: Name of the SerDe. The maximum
+                                        length is 256 characters.
+                                      type: string
+                                    parameters:
+                                      additionalProperties:
+                                        type: string
+                                      description: |-
+                                        Key-value pairs that define the initialization
+                                        parameters for the serialization library. Maximum size 10 Kib.
+                                      type: object
+                                      x-kubernetes-map-type: granular
+                                    serializationLibrary:
+                                      description: |-
+                                        Specifies a fully-qualified class name of
+                                        the serialization library that is responsible for the translation of data
+                                        between table representation and the underlying low-level input and output
+                                        format structures. The maximum length is 256 characters.
+                                      type: string
+                                  type: object
+                                type: array
+                            type: object
+                          type: array
+                      type: object
+                    type: array
                   externalDataConfiguration:
                     description: |-
                       Describes the data format,
@@ -1214,6 +1441,17 @@ spec:
                   friendlyName:
                     description: A descriptive name for the table.
                     type: string
+                  ignoreAutoGeneratedSchema:
+                    description: g. hive partitioned columns) in schema from showing
+                      diff.
+                    type: boolean
+                  ignoreSchemaChanges:
+                    description: |-
+                      A list of fields which should be ignored for each column in schema.
+                      NOTE: Right now only dataPolicies field is supported. We might support others in the future.
+                    items:
+                      type: string
+                    type: array
                   labels:
                     additionalProperties:
                       type: string
@@ -1303,6 +1541,19 @@ spec:
                   schema:
                     description: A JSON schema for the table.
                     type: string
+                  schemaForeignTypeInfo:
+                    description: |-
+                      Specifies metadata of the foreign data
+                      type definition in field schema. Structure is documented below.
+                    items:
+                      properties:
+                        typeSystem:
+                          description: |-
+                            Specifies the system which defines the foreign data
+                            type.
+                          type: string
+                      type: object
+                    type: array
                   tableConstraints:
                     description: |-
                       Defines the primary key and foreign keys.
@@ -1375,6 +1626,11 @@ spec:
                           type: array
                       type: object
                     type: array
+                  tableMetadataView:
+                    description: |-
+                      If specified, configures this table as a view.
+                      Structure is documented below.
+                    type: string
                   tableReplicationInfo:
                     description: |-
                       Replication info of a table created
@@ -1446,6 +1702,8 @@ spec:
                           description: |-
                             Specifies whether to use BigQuery's legacy SQL for this view.
                             The default value is true. If set to false, the view will use BigQuery's standard SQL.
+                            -> Note: Starting in provider version 7.0.0, no default value is
+                            provided for this field unless explicitly set in the configuration.
                           type: boolean
                       type: object
                     type: array
@@ -1516,93 +1774,12 @@ spec:
                 required:
                 - name
                 type: object
-              publishConnectionDetailsTo:
-                description: |-
-                  PublishConnectionDetailsTo specifies the connection secret config which
-                  contains a name, metadata and a reference to secret store config to
-                  which any connection details for this managed resource should be written.
-                  Connection details frequently include the endpoint, username,
-                  and password required to connect to the managed resource.
-                properties:
-                  configRef:
-                    default:
-                      name: default
-                    description: |-
-                      SecretStoreConfigRef specifies which secret store config should be used
-                      for this ConnectionSecret.
-                    properties:
-                      name:
-                        description: Name of the referenced object.
-                        type: string
-                      policy:
-                        description: Policies for referencing.
-                        properties:
-                          resolution:
-                            default: Required
-                            description: |-
-                              Resolution specifies whether resolution of this reference is required.
-                              The default is 'Required', which means the reconcile will fail if the
-                              reference cannot be resolved. 'Optional' means this reference will be
-                              a no-op if it cannot be resolved.
-                            enum:
-                            - Required
-                            - Optional
-                            type: string
-                          resolve:
-                            description: |-
-                              Resolve specifies when this reference should be resolved. The default
-                              is 'IfNotPresent', which will attempt to resolve the reference only when
-                              the corresponding field is not present. Use 'Always' to resolve the
-                              reference on every reconcile.
-                            enum:
-                            - Always
-                            - IfNotPresent
-                            type: string
-                        type: object
-                    required:
-                    - name
-                    type: object
-                  metadata:
-                    description: Metadata is the metadata for connection secret.
-                    properties:
-                      annotations:
-                        additionalProperties:
-                          type: string
-                        description: |-
-                          Annotations are the annotations to be added to connection secret.
-                          - For Kubernetes secrets, this will be used as "metadata.annotations".
-                          - It is up to Secret Store implementation for others store types.
-                        type: object
-                      labels:
-                        additionalProperties:
-                          type: string
-                        description: |-
-                          Labels are the labels/tags to be added to connection secret.
-                          - For Kubernetes secrets, this will be used as "metadata.labels".
-                          - It is up to Secret Store implementation for others store types.
-                        type: object
-                      type:
-                        description: |-
-                          Type is the SecretType for the connection secret.
-                          - Only valid for Kubernetes Secret Stores.
-                        type: string
-                    type: object
-                  name:
-                    description: Name is the name of the connection secret.
-                    type: string
-                required:
-                - name
-                type: object
               writeConnectionSecretToRef:
                 description: |-
                   WriteConnectionSecretToReference specifies the namespace and name of a
                   Secret to which any connection details for this managed resource should
                   be written. Connection details frequently include the endpoint, username,
                   and password required to connect to the managed resource.
-                  This field is planned to be replaced in a future release in favor of
-                  PublishConnectionDetailsTo. Currently, both could be set independently
-                  and connection details would be published to both without affecting
-                  each other.
                 properties:
                   name:
                     description: Name of the secret.
@@ -1622,12 +1799,32 @@ spec:
             properties:
               atProvider:
                 properties:
-                  allowResourceTagsOnDeletion:
-                    description: |-
-                      If set to true, it allows table
-                      deletion when there are still resource tags attached. The default value is
-                      false.
-                    type: boolean
+                  biglakeConfiguration:
+                    description: Specifies the configuration of a BigLake managed
+                      table. Structure is documented below
+                    items:
+                      properties:
+                        connectionId:
+                          description: |-
+                            The connection specifying the credentials to be used to
+                            read and write to external storage, such as Cloud Storage. The connection_id can
+                            have the form "<project_id>.<location_id>.<connection_id>" or
+                            projects/<project_id>/locations/<location_id>/connections/<connection_id>".
+                          type: string
+                        fileFormat:
+                          description: The file format the table data is stored in.
+                          type: string
+                        storageUri:
+                          description: |-
+                            The fully qualified location prefix of the external folder where table data
+                            is stored. The '*' wildcard character is not allowed. The URI should be in the format "gs://bucket/path_to_table/"
+                          type: string
+                        tableFormat:
+                          description: The table format the metadata only snapshots
+                            are stored in.
+                          type: string
+                      type: object
+                    type: array
                   clustering:
                     description: |-
                       Specifies column names to use for data clustering.
@@ -1688,6 +1885,84 @@ spec:
                       indefinitely. Expired tables will be deleted and their storage
                       reclaimed.
                     type: number
+                  externalCatalogTableOptions:
+                    description: |-
+                      Options defining open source
+                      compatible table. Structure is documented below.
+                    items:
+                      properties:
+                        connectionId:
+                          description: |-
+                            The connection specifying the credentials to be
+                            used to read external storage, such as Azure Blob, Cloud Storage, or S3. The
+                            connection is needed to read the open source table from BigQuery Engine. The
+                            connection_id can have the form <project_id>.<location_id>.<connection_id>
+                            or projects/<project_id>/locations/<location_id>/connections/<connection_id>.
+                          type: string
+                        parameters:
+                          additionalProperties:
+                            type: string
+                          description: |-
+                            A map of key value pairs defining the parameters and
+                            properties of the open source table. Corresponds with hive meta store table
+                            parameters. Maximum size of 4Mib.
+                          type: object
+                          x-kubernetes-map-type: granular
+                        storageDescriptor:
+                          description: |-
+                            A storage descriptor containing information
+                            about the physical storage of this table. Structure is documented below.
+                          items:
+                            properties:
+                              inputFormat:
+                                description: |-
+                                  Specifies the fully qualified class name of the
+                                  InputFormat (e.g. "org.apache.hadoop.hive.ql.io.orc.OrcInputFormat"). The
+                                  maximum length is 128 characters.
+                                type: string
+                              locationUri:
+                                description: |-
+                                  The physical location of the table (e.g.
+                                  'gs://spark-dataproc-data/pangea-data/case_sensitive/' or
+                                  'gs://spark-dataproc-data/pangea-data/*'). The maximum length is 2056 bytes.
+                                type: string
+                              outputFormat:
+                                description: |-
+                                  Specifies the fully qualified class name of the
+                                  OutputFormat (e.g. "org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat"). The
+                                  maximum length is 128 characters.
+                                type: string
+                              serdeInfo:
+                                description: |-
+                                  Serializer and deserializer information. Structure
+                                  is documented below.
+                                items:
+                                  properties:
+                                    name:
+                                      description: Name of the SerDe. The maximum
+                                        length is 256 characters.
+                                      type: string
+                                    parameters:
+                                      additionalProperties:
+                                        type: string
+                                      description: |-
+                                        Key-value pairs that define the initialization
+                                        parameters for the serialization library. Maximum size 10 Kib.
+                                      type: object
+                                      x-kubernetes-map-type: granular
+                                    serializationLibrary:
+                                      description: |-
+                                        Specifies a fully-qualified class name of
+                                        the serialization library that is responsible for the translation of data
+                                        between table representation and the underlying low-level input and output
+                                        format structures. The maximum length is 256 characters.
+                                      type: string
+                                  type: object
+                                type: array
+                            type: object
+                          type: array
+                      type: object
+                    type: array
                   externalDataConfiguration:
                     description: |-
                       Describes the data format,
@@ -2044,9 +2319,22 @@ spec:
                   friendlyName:
                     description: A descriptive name for the table.
                     type: string
+                  generatedSchemaColumns:
+                    type: string
                   id:
                     description: an identifier for the resource with format projects/{{project}}/datasets/{{dataset}}/tables/{{name}}
                     type: string
+                  ignoreAutoGeneratedSchema:
+                    description: g. hive partitioned columns) in schema from showing
+                      diff.
+                    type: boolean
+                  ignoreSchemaChanges:
+                    description: |-
+                      A list of fields which should be ignored for each column in schema.
+                      NOTE: Right now only dataPolicies field is supported. We might support others in the future.
+                    items:
+                      type: string
+                    type: array
                   labels:
                     additionalProperties:
                       type: string
@@ -2161,6 +2449,19 @@ spec:
                   schema:
                     description: A JSON schema for the table.
                     type: string
+                  schemaForeignTypeInfo:
+                    description: |-
+                      Specifies metadata of the foreign data
+                      type definition in field schema. Structure is documented below.
+                    items:
+                      properties:
+                        typeSystem:
+                          description: |-
+                            Specifies the system which defines the foreign data
+                            type.
+                          type: string
+                      type: object
+                    type: array
                   selfLink:
                     description: The URI of the created resource.
                     type: string
@@ -2240,6 +2541,11 @@ spec:
                           type: array
                       type: object
                     type: array
+                  tableMetadataView:
+                    description: |-
+                      If specified, configures this table as a view.
+                      Structure is documented below.
+                    type: string
                   tableReplicationInfo:
                     description: |-
                       Replication info of a table created
@@ -2321,6 +2627,8 @@ spec:
                           description: |-
                             Specifies whether to use BigQuery's legacy SQL for this view.
                             The default value is true. If set to false, the view will use BigQuery's standard SQL.
+                            -> Note: Starting in provider version 7.0.0, no default value is
+                            provided for this field unless explicitly set in the configuration.
                           type: boolean
                       type: object
                     type: array
@@ -2441,12 +2749,30 @@ spec:
                 type: string
               forProvider:
                 properties:
-                  allowResourceTagsOnDeletion:
-                    description: |-
-                      If set to true, it allows table
-                      deletion when there are still resource tags attached. The default value is
-                      false.
-                    type: boolean
+                  biglakeConfiguration:
+                    description: Specifies the configuration of a BigLake managed
+                      table. Structure is documented below
+                    properties:
+                      connectionId:
+                        description: |-
+                          The connection specifying the credentials to be used to
+                          read and write to external storage, such as Cloud Storage. The connection_id can
+                          have the form "<project_id>.<location_id>.<connection_id>" or
+                          projects/<project_id>/locations/<location_id>/connections/<connection_id>".
+                        type: string
+                      fileFormat:
+                        description: The file format the table data is stored in.
+                        type: string
+                      storageUri:
+                        description: |-
+                          The fully qualified location prefix of the external folder where table data
+                          is stored. The '*' wildcard character is not allowed. The URI should be in the format "gs://bucket/path_to_table/"
+                        type: string
+                      tableFormat:
+                        description: The table format the metadata only snapshots
+                          are stored in.
+                        type: string
+                    type: object
                   clustering:
                     description: |-
                       Specifies column names to use for data clustering.
@@ -2563,6 +2889,78 @@ spec:
                       indefinitely. Expired tables will be deleted and their storage
                       reclaimed.
                     type: number
+                  externalCatalogTableOptions:
+                    description: |-
+                      Options defining open source
+                      compatible table. Structure is documented below.
+                    properties:
+                      connectionId:
+                        description: |-
+                          The connection specifying the credentials to be
+                          used to read external storage, such as Azure Blob, Cloud Storage, or S3. The
+                          connection is needed to read the open source table from BigQuery Engine. The
+                          connection_id can have the form <project_id>.<location_id>.<connection_id>
+                          or projects/<project_id>/locations/<location_id>/connections/<connection_id>.
+                        type: string
+                      parameters:
+                        additionalProperties:
+                          type: string
+                        description: |-
+                          A map of key value pairs defining the parameters and
+                          properties of the open source table. Corresponds with hive meta store table
+                          parameters. Maximum size of 4Mib.
+                        type: object
+                        x-kubernetes-map-type: granular
+                      storageDescriptor:
+                        description: |-
+                          A storage descriptor containing information
+                          about the physical storage of this table. Structure is documented below.
+                        properties:
+                          inputFormat:
+                            description: |-
+                              Specifies the fully qualified class name of the
+                              InputFormat (e.g. "org.apache.hadoop.hive.ql.io.orc.OrcInputFormat"). The
+                              maximum length is 128 characters.
+                            type: string
+                          locationUri:
+                            description: |-
+                              The physical location of the table (e.g.
+                              'gs://spark-dataproc-data/pangea-data/case_sensitive/' or
+                              'gs://spark-dataproc-data/pangea-data/*'). The maximum length is 2056 bytes.
+                            type: string
+                          outputFormat:
+                            description: |-
+                              Specifies the fully qualified class name of the
+                              OutputFormat (e.g. "org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat"). The
+                              maximum length is 128 characters.
+                            type: string
+                          serdeInfo:
+                            description: |-
+                              Serializer and deserializer information. Structure
+                              is documented below.
+                            properties:
+                              name:
+                                description: Name of the SerDe. The maximum length
+                                  is 256 characters.
+                                type: string
+                              parameters:
+                                additionalProperties:
+                                  type: string
+                                description: |-
+                                  Key-value pairs that define the initialization
+                                  parameters for the serialization library. Maximum size 10 Kib.
+                                type: object
+                                x-kubernetes-map-type: granular
+                              serializationLibrary:
+                                description: |-
+                                  Specifies a fully-qualified class name of
+                                  the serialization library that is responsible for the translation of data
+                                  between table representation and the underlying low-level input and output
+                                  format structures. The maximum length is 256 characters.
+                                type: string
+                            type: object
+                        type: object
+                    type: object
                   externalDataConfiguration:
                     description: |-
                       Describes the data format,
@@ -2572,7 +2970,7 @@ spec:
                     properties:
                       autodetect:
                         description: |-
-                          - Let BigQuery try to autodetect the schema
+                          Let BigQuery try to autodetect the schema
                           and format of the table.
                         type: boolean
                       avroOptions:
@@ -2895,6 +3293,17 @@ spec:
                   friendlyName:
                     description: A descriptive name for the table.
                     type: string
+                  ignoreAutoGeneratedSchema:
+                    description: g. hive partitioned columns) in schema from showing
+                      diff.
+                    type: boolean
+                  ignoreSchemaChanges:
+                    description: |-
+                      A list of fields which should be ignored for each column in schema.
+                      NOTE: Right now only dataPolicies field is supported. We might support others in the future.
+                    items:
+                      type: string
+                    type: array
                   labels:
                     additionalProperties:
                       type: string
@@ -2927,7 +3336,7 @@ spec:
                     type: object
                   maxStaleness:
                     description: |-
-                      :  The maximum staleness of data that could be
+                      The maximum staleness of data that could be
                       returned when the table (or stale MV) is queried. Staleness encoded as a
                       string encoding of SQL IntervalValue
                       type.
@@ -2977,12 +3386,24 @@ spec:
                       globally unique. Tag key is expected to be in the namespaced format, for
                       example "123456789012/environment" where 123456789012 is the ID of the
                       parent organization or project resource for this tag key. Tag value is
-                      expected to be the short name, for example "Production".
+                      expected to be the short name, for example "Production". See Tag definitions
+                      for more details.
                     type: object
                     x-kubernetes-map-type: granular
                   schema:
                     description: A JSON schema for the table.
                     type: string
+                  schemaForeignTypeInfo:
+                    description: |-
+                      Specifies metadata of the foreign data
+                      type definition in field schema. Structure is documented below.
+                    properties:
+                      typeSystem:
+                        description: |-
+                          Specifies the system which defines the foreign data
+                          type.
+                        type: string
+                    type: object
                   tableConstraints:
                     description: |-
                       Defines the primary key and foreign keys.
@@ -2997,36 +3418,36 @@ spec:
                           properties:
                             columnReferences:
                               description: |-
-                                :  The pair of the foreign key column and primary key column.
+                                The pair of the foreign key column and primary key column.
                                 Structure is documented below.
                               properties:
                                 referencedColumn:
                                   description: |-
-                                    :  The column in the primary key that are
+                                    The column in the primary key that are
                                     referenced by the referencingColumn
                                   type: string
                                 referencingColumn:
-                                  description: ':  The column that composes the foreign
-                                    key.'
+                                  description: The column that composes the foreign
+                                    key.
                                   type: string
                               type: object
                             name:
-                              description: ':  Set only if the foreign key constraint
-                                is named.'
+                              description: Name of the SerDe. The maximum length is
+                                256 characters.
                               type: string
                             referencedTable:
                               description: |-
-                                :  The table that holds the primary key
+                                The table that holds the primary key
                                 and is referenced by this foreign key.
                                 Structure is documented below.
                               properties:
                                 datasetId:
-                                  description: ':  The ID of the dataset containing
-                                    this table.'
+                                  description: The ID of the dataset containing this
+                                    table.
                                   type: string
                                 projectId:
-                                  description: ':  The ID of the project containing
-                                    this table.'
+                                  description: The ID of the project containing this
+                                    table.
                                   type: string
                                 tableId:
                                   description: |-
@@ -3046,13 +3467,18 @@ spec:
                           Structure is documented below.
                         properties:
                           columns:
-                            description: ':  The columns that are composed of the
-                              primary key constraint.'
+                            description: The columns that are composed of the primary
+                              key constraint.
                             items:
                               type: string
                             type: array
                         type: object
                     type: object
+                  tableMetadataView:
+                    description: |-
+                      If specified, configures this table as a view.
+                      Structure is documented below.
+                    type: string
                   tableReplicationInfo:
                     description: |-
                       Replication info of a table created
@@ -3117,6 +3543,8 @@ spec:
                         description: |-
                           Specifies whether to use BigQuery's legacy SQL for this view.
                           The default value is true. If set to false, the view will use BigQuery's standard SQL.
+                          -> Note: Starting in provider version 7.0.0, no default value is
+                          provided for this field unless explicitly set in the configuration.
                         type: boolean
                     type: object
                 type: object
@@ -3133,12 +3561,30 @@ spec:
                   for example because of an external controller is managing them, like an
                   autoscaler.
                 properties:
-                  allowResourceTagsOnDeletion:
-                    description: |-
-                      If set to true, it allows table
-                      deletion when there are still resource tags attached. The default value is
-                      false.
-                    type: boolean
+                  biglakeConfiguration:
+                    description: Specifies the configuration of a BigLake managed
+                      table. Structure is documented below
+                    properties:
+                      connectionId:
+                        description: |-
+                          The connection specifying the credentials to be used to
+                          read and write to external storage, such as Cloud Storage. The connection_id can
+                          have the form "<project_id>.<location_id>.<connection_id>" or
+                          projects/<project_id>/locations/<location_id>/connections/<connection_id>".
+                        type: string
+                      fileFormat:
+                        description: The file format the table data is stored in.
+                        type: string
+                      storageUri:
+                        description: |-
+                          The fully qualified location prefix of the external folder where table data
+                          is stored. The '*' wildcard character is not allowed. The URI should be in the format "gs://bucket/path_to_table/"
+                        type: string
+                      tableFormat:
+                        description: The table format the metadata only snapshots
+                          are stored in.
+                        type: string
+                    type: object
                   clustering:
                     description: |-
                       Specifies column names to use for data clustering.
@@ -3176,6 +3622,78 @@ spec:
                       indefinitely. Expired tables will be deleted and their storage
                       reclaimed.
                     type: number
+                  externalCatalogTableOptions:
+                    description: |-
+                      Options defining open source
+                      compatible table. Structure is documented below.
+                    properties:
+                      connectionId:
+                        description: |-
+                          The connection specifying the credentials to be
+                          used to read external storage, such as Azure Blob, Cloud Storage, or S3. The
+                          connection is needed to read the open source table from BigQuery Engine. The
+                          connection_id can have the form <project_id>.<location_id>.<connection_id>
+                          or projects/<project_id>/locations/<location_id>/connections/<connection_id>.
+                        type: string
+                      parameters:
+                        additionalProperties:
+                          type: string
+                        description: |-
+                          A map of key value pairs defining the parameters and
+                          properties of the open source table. Corresponds with hive meta store table
+                          parameters. Maximum size of 4Mib.
+                        type: object
+                        x-kubernetes-map-type: granular
+                      storageDescriptor:
+                        description: |-
+                          A storage descriptor containing information
+                          about the physical storage of this table. Structure is documented below.
+                        properties:
+                          inputFormat:
+                            description: |-
+                              Specifies the fully qualified class name of the
+                              InputFormat (e.g. "org.apache.hadoop.hive.ql.io.orc.OrcInputFormat"). The
+                              maximum length is 128 characters.
+                            type: string
+                          locationUri:
+                            description: |-
+                              The physical location of the table (e.g.
+                              'gs://spark-dataproc-data/pangea-data/case_sensitive/' or
+                              'gs://spark-dataproc-data/pangea-data/*'). The maximum length is 2056 bytes.
+                            type: string
+                          outputFormat:
+                            description: |-
+                              Specifies the fully qualified class name of the
+                              OutputFormat (e.g. "org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat"). The
+                              maximum length is 128 characters.
+                            type: string
+                          serdeInfo:
+                            description: |-
+                              Serializer and deserializer information. Structure
+                              is documented below.
+                            properties:
+                              name:
+                                description: Name of the SerDe. The maximum length
+                                  is 256 characters.
+                                type: string
+                              parameters:
+                                additionalProperties:
+                                  type: string
+                                description: |-
+                                  Key-value pairs that define the initialization
+                                  parameters for the serialization library. Maximum size 10 Kib.
+                                type: object
+                                x-kubernetes-map-type: granular
+                              serializationLibrary:
+                                description: |-
+                                  Specifies a fully-qualified class name of
+                                  the serialization library that is responsible for the translation of data
+                                  between table representation and the underlying low-level input and output
+                                  format structures. The maximum length is 256 characters.
+                                type: string
+                            type: object
+                        type: object
+                    type: object
                   externalDataConfiguration:
                     description: |-
                       Describes the data format,
@@ -3185,7 +3703,7 @@ spec:
                     properties:
                       autodetect:
                         description: |-
-                          - Let BigQuery try to autodetect the schema
+                          Let BigQuery try to autodetect the schema
                           and format of the table.
                         type: boolean
                       avroOptions:
@@ -3508,6 +4026,17 @@ spec:
                   friendlyName:
                     description: A descriptive name for the table.
                     type: string
+                  ignoreAutoGeneratedSchema:
+                    description: g. hive partitioned columns) in schema from showing
+                      diff.
+                    type: boolean
+                  ignoreSchemaChanges:
+                    description: |-
+                      A list of fields which should be ignored for each column in schema.
+                      NOTE: Right now only dataPolicies field is supported. We might support others in the future.
+                    items:
+                      type: string
+                    type: array
                   labels:
                     additionalProperties:
                       type: string
@@ -3540,7 +4069,7 @@ spec:
                     type: object
                   maxStaleness:
                     description: |-
-                      :  The maximum staleness of data that could be
+                      The maximum staleness of data that could be
                       returned when the table (or stale MV) is queried. Staleness encoded as a
                       string encoding of SQL IntervalValue
                       type.
@@ -3585,12 +4114,24 @@ spec:
                       globally unique. Tag key is expected to be in the namespaced format, for
                       example "123456789012/environment" where 123456789012 is the ID of the
                       parent organization or project resource for this tag key. Tag value is
-                      expected to be the short name, for example "Production".
+                      expected to be the short name, for example "Production". See Tag definitions
+                      for more details.
                     type: object
                     x-kubernetes-map-type: granular
                   schema:
                     description: A JSON schema for the table.
                     type: string
+                  schemaForeignTypeInfo:
+                    description: |-
+                      Specifies metadata of the foreign data
+                      type definition in field schema. Structure is documented below.
+                    properties:
+                      typeSystem:
+                        description: |-
+                          Specifies the system which defines the foreign data
+                          type.
+                        type: string
+                    type: object
                   tableConstraints:
                     description: |-
                       Defines the primary key and foreign keys.
@@ -3605,32 +4146,32 @@ spec:
                           properties:
                             columnReferences:
                               description: |-
-                                :  The pair of the foreign key column and primary key column.
+                                The pair of the foreign key column and primary key column.
                                 Structure is documented below.
                               properties:
                                 referencedColumn:
                                   description: |-
-                                    :  The column in the primary key that are
+                                    The column in the primary key that are
                                     referenced by the referencingColumn
                                   type: string
                                 referencingColumn:
-                                  description: ':  The column that composes the foreign
-                                    key.'
+                                  description: The column that composes the foreign
+                                    key.
                                   type: string
                               type: object
                             name:
-                              description: ':  Set only if the foreign key constraint
-                                is named.'
+                              description: Name of the SerDe. The maximum length is
+                                256 characters.
                               type: string
                             referencedTable:
                               description: |-
-                                :  The table that holds the primary key
+                                The table that holds the primary key
                                 and is referenced by this foreign key.
                                 Structure is documented below.
                               properties:
                                 projectId:
-                                  description: ':  The ID of the project containing
-                                    this table.'
+                                  description: The ID of the project containing this
+                                    table.
                                   type: string
                                 tableId:
                                   description: |-
@@ -3648,13 +4189,18 @@ spec:
                           Structure is documented below.
                         properties:
                           columns:
-                            description: ':  The columns that are composed of the
-                              primary key constraint.'
+                            description: The columns that are composed of the primary
+                              key constraint.
                             items:
                               type: string
                             type: array
                         type: object
                     type: object
+                  tableMetadataView:
+                    description: |-
+                      If specified, configures this table as a view.
+                      Structure is documented below.
+                    type: string
                   tableReplicationInfo:
                     description: |-
                       Replication info of a table created
@@ -3719,6 +4265,8 @@ spec:
                         description: |-
                           Specifies whether to use BigQuery's legacy SQL for this view.
                           The default value is true. If set to false, the view will use BigQuery's standard SQL.
+                          -> Note: Starting in provider version 7.0.0, no default value is
+                          provided for this field unless explicitly set in the configuration.
                         type: boolean
                     type: object
                 type: object
@@ -3788,93 +4336,12 @@ spec:
                 required:
                 - name
                 type: object
-              publishConnectionDetailsTo:
-                description: |-
-                  PublishConnectionDetailsTo specifies the connection secret config which
-                  contains a name, metadata and a reference to secret store config to
-                  which any connection details for this managed resource should be written.
-                  Connection details frequently include the endpoint, username,
-                  and password required to connect to the managed resource.
-                properties:
-                  configRef:
-                    default:
-                      name: default
-                    description: |-
-                      SecretStoreConfigRef specifies which secret store config should be used
-                      for this ConnectionSecret.
-                    properties:
-                      name:
-                        description: Name of the referenced object.
-                        type: string
-                      policy:
-                        description: Policies for referencing.
-                        properties:
-                          resolution:
-                            default: Required
-                            description: |-
-                              Resolution specifies whether resolution of this reference is required.
-                              The default is 'Required', which means the reconcile will fail if the
-                              reference cannot be resolved. 'Optional' means this reference will be
-                              a no-op if it cannot be resolved.
-                            enum:
-                            - Required
-                            - Optional
-                            type: string
-                          resolve:
-                            description: |-
-                              Resolve specifies when this reference should be resolved. The default
-                              is 'IfNotPresent', which will attempt to resolve the reference only when
-                              the corresponding field is not present. Use 'Always' to resolve the
-                              reference on every reconcile.
-                            enum:
-                            - Always
-                            - IfNotPresent
-                            type: string
-                        type: object
-                    required:
-                    - name
-                    type: object
-                  metadata:
-                    description: Metadata is the metadata for connection secret.
-                    properties:
-                      annotations:
-                        additionalProperties:
-                          type: string
-                        description: |-
-                          Annotations are the annotations to be added to connection secret.
-                          - For Kubernetes secrets, this will be used as "metadata.annotations".
-                          - It is up to Secret Store implementation for others store types.
-                        type: object
-                      labels:
-                        additionalProperties:
-                          type: string
-                        description: |-
-                          Labels are the labels/tags to be added to connection secret.
-                          - For Kubernetes secrets, this will be used as "metadata.labels".
-                          - It is up to Secret Store implementation for others store types.
-                        type: object
-                      type:
-                        description: |-
-                          Type is the SecretType for the connection secret.
-                          - Only valid for Kubernetes Secret Stores.
-                        type: string
-                    type: object
-                  name:
-                    description: Name is the name of the connection secret.
-                    type: string
-                required:
-                - name
-                type: object
               writeConnectionSecretToRef:
                 description: |-
                   WriteConnectionSecretToReference specifies the namespace and name of a
                   Secret to which any connection details for this managed resource should
                   be written. Connection details frequently include the endpoint, username,
                   and password required to connect to the managed resource.
-                  This field is planned to be replaced in a future release in favor of
-                  PublishConnectionDetailsTo. Currently, both could be set independently
-                  and connection details would be published to both without affecting
-                  each other.
                 properties:
                   name:
                     description: Name of the secret.
@@ -3894,12 +4361,30 @@ spec:
             properties:
               atProvider:
                 properties:
-                  allowResourceTagsOnDeletion:
-                    description: |-
-                      If set to true, it allows table
-                      deletion when there are still resource tags attached. The default value is
-                      false.
-                    type: boolean
+                  biglakeConfiguration:
+                    description: Specifies the configuration of a BigLake managed
+                      table. Structure is documented below
+                    properties:
+                      connectionId:
+                        description: |-
+                          The connection specifying the credentials to be used to
+                          read and write to external storage, such as Cloud Storage. The connection_id can
+                          have the form "<project_id>.<location_id>.<connection_id>" or
+                          projects/<project_id>/locations/<location_id>/connections/<connection_id>".
+                        type: string
+                      fileFormat:
+                        description: The file format the table data is stored in.
+                        type: string
+                      storageUri:
+                        description: |-
+                          The fully qualified location prefix of the external folder where table data
+                          is stored. The '*' wildcard character is not allowed. The URI should be in the format "gs://bucket/path_to_table/"
+                        type: string
+                      tableFormat:
+                        description: The table format the metadata only snapshots
+                          are stored in.
+                        type: string
+                    type: object
                   clustering:
                     description: |-
                       Specifies column names to use for data clustering.
@@ -3958,6 +4443,78 @@ spec:
                       indefinitely. Expired tables will be deleted and their storage
                       reclaimed.
                     type: number
+                  externalCatalogTableOptions:
+                    description: |-
+                      Options defining open source
+                      compatible table. Structure is documented below.
+                    properties:
+                      connectionId:
+                        description: |-
+                          The connection specifying the credentials to be
+                          used to read external storage, such as Azure Blob, Cloud Storage, or S3. The
+                          connection is needed to read the open source table from BigQuery Engine. The
+                          connection_id can have the form <project_id>.<location_id>.<connection_id>
+                          or projects/<project_id>/locations/<location_id>/connections/<connection_id>.
+                        type: string
+                      parameters:
+                        additionalProperties:
+                          type: string
+                        description: |-
+                          A map of key value pairs defining the parameters and
+                          properties of the open source table. Corresponds with hive meta store table
+                          parameters. Maximum size of 4Mib.
+                        type: object
+                        x-kubernetes-map-type: granular
+                      storageDescriptor:
+                        description: |-
+                          A storage descriptor containing information
+                          about the physical storage of this table. Structure is documented below.
+                        properties:
+                          inputFormat:
+                            description: |-
+                              Specifies the fully qualified class name of the
+                              InputFormat (e.g. "org.apache.hadoop.hive.ql.io.orc.OrcInputFormat"). The
+                              maximum length is 128 characters.
+                            type: string
+                          locationUri:
+                            description: |-
+                              The physical location of the table (e.g.
+                              'gs://spark-dataproc-data/pangea-data/case_sensitive/' or
+                              'gs://spark-dataproc-data/pangea-data/*'). The maximum length is 2056 bytes.
+                            type: string
+                          outputFormat:
+                            description: |-
+                              Specifies the fully qualified class name of the
+                              OutputFormat (e.g. "org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat"). The
+                              maximum length is 128 characters.
+                            type: string
+                          serdeInfo:
+                            description: |-
+                              Serializer and deserializer information. Structure
+                              is documented below.
+                            properties:
+                              name:
+                                description: Name of the SerDe. The maximum length
+                                  is 256 characters.
+                                type: string
+                              parameters:
+                                additionalProperties:
+                                  type: string
+                                description: |-
+                                  Key-value pairs that define the initialization
+                                  parameters for the serialization library. Maximum size 10 Kib.
+                                type: object
+                                x-kubernetes-map-type: granular
+                              serializationLibrary:
+                                description: |-
+                                  Specifies a fully-qualified class name of
+                                  the serialization library that is responsible for the translation of data
+                                  between table representation and the underlying low-level input and output
+                                  format structures. The maximum length is 256 characters.
+                                type: string
+                            type: object
+                        type: object
+                    type: object
                   externalDataConfiguration:
                     description: |-
                       Describes the data format,
@@ -3967,7 +4524,7 @@ spec:
                     properties:
                       autodetect:
                         description: |-
-                          - Let BigQuery try to autodetect the schema
+                          Let BigQuery try to autodetect the schema
                           and format of the table.
                         type: boolean
                       avroOptions:
@@ -4290,9 +4847,22 @@ spec:
                   friendlyName:
                     description: A descriptive name for the table.
                     type: string
-                  id:
-                    description: an identifier for the resource with format projects/{{project}}/datasets/{{dataset}}/tables/{{name}}
+                  generatedSchemaColumns:
                     type: string
+                  id:
+                    description: An identifier for the resource with format projects/{{project}}/datasets/{{dataset}}/tables/{{name}}
+                    type: string
+                  ignoreAutoGeneratedSchema:
+                    description: g. hive partitioned columns) in schema from showing
+                      diff.
+                    type: boolean
+                  ignoreSchemaChanges:
+                    description: |-
+                      A list of fields which should be ignored for each column in schema.
+                      NOTE: Right now only dataPolicies field is supported. We might support others in the future.
+                    items:
+                      type: string
+                    type: array
                   labels:
                     additionalProperties:
                       type: string
@@ -4333,7 +4903,7 @@ spec:
                     type: object
                   maxStaleness:
                     description: |-
-                      :  The maximum staleness of data that could be
+                      The maximum staleness of data that could be
                       returned when the table (or stale MV) is queried. Staleness encoded as a
                       string encoding of SQL IntervalValue
                       type.
@@ -4395,12 +4965,24 @@ spec:
                       globally unique. Tag key is expected to be in the namespaced format, for
                       example "123456789012/environment" where 123456789012 is the ID of the
                       parent organization or project resource for this tag key. Tag value is
-                      expected to be the short name, for example "Production".
+                      expected to be the short name, for example "Production". See Tag definitions
+                      for more details.
                     type: object
                     x-kubernetes-map-type: granular
                   schema:
                     description: A JSON schema for the table.
                     type: string
+                  schemaForeignTypeInfo:
+                    description: |-
+                      Specifies metadata of the foreign data
+                      type definition in field schema. Structure is documented below.
+                    properties:
+                      typeSystem:
+                        description: |-
+                          Specifies the system which defines the foreign data
+                          type.
+                        type: string
+                    type: object
                   selfLink:
                     description: The URI of the created resource.
                     type: string
@@ -4418,36 +5000,36 @@ spec:
                           properties:
                             columnReferences:
                               description: |-
-                                :  The pair of the foreign key column and primary key column.
+                                The pair of the foreign key column and primary key column.
                                 Structure is documented below.
                               properties:
                                 referencedColumn:
                                   description: |-
-                                    :  The column in the primary key that are
+                                    The column in the primary key that are
                                     referenced by the referencingColumn
                                   type: string
                                 referencingColumn:
-                                  description: ':  The column that composes the foreign
-                                    key.'
+                                  description: The column that composes the foreign
+                                    key.
                                   type: string
                               type: object
                             name:
-                              description: ':  Set only if the foreign key constraint
-                                is named.'
+                              description: Name of the SerDe. The maximum length is
+                                256 characters.
                               type: string
                             referencedTable:
                               description: |-
-                                :  The table that holds the primary key
+                                The table that holds the primary key
                                 and is referenced by this foreign key.
                                 Structure is documented below.
                               properties:
                                 datasetId:
-                                  description: ':  The ID of the dataset containing
-                                    this table.'
+                                  description: The ID of the dataset containing this
+                                    table.
                                   type: string
                                 projectId:
-                                  description: ':  The ID of the project containing
-                                    this table.'
+                                  description: The ID of the project containing this
+                                    table.
                                   type: string
                                 tableId:
                                   description: |-
@@ -4465,13 +5047,18 @@ spec:
                           Structure is documented below.
                         properties:
                           columns:
-                            description: ':  The columns that are composed of the
-                              primary key constraint.'
+                            description: The columns that are composed of the primary
+                              key constraint.
                             items:
                               type: string
                             type: array
                         type: object
                     type: object
+                  tableMetadataView:
+                    description: |-
+                      If specified, configures this table as a view.
+                      Structure is documented below.
+                    type: string
                   tableReplicationInfo:
                     description: |-
                       Replication info of a table created
@@ -4546,6 +5133,8 @@ spec:
                         description: |-
                           Specifies whether to use BigQuery's legacy SQL for this view.
                           The default value is true. If set to false, the view will use BigQuery's standard SQL.
+                          -> Note: Starting in provider version 7.0.0, no default value is
+                          provided for this field unless explicitly set in the configuration.
                         type: boolean
                     type: object
                 type: object

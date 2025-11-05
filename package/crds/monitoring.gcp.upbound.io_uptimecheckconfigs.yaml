@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.18.0
   name: uptimecheckconfigs.monitoring.gcp.upbound.io
 spec:
   group: monitoring.gcp.upbound.io
@@ -150,9 +150,8 @@ spec:
                           items:
                             properties:
                               passwordSecretRef:
-                                description: |-
-                                  The password to authenticate.
-                                  Note: This property is sensitive and will not be displayed in the plan.
+                                description: A SecretKeySelector is a reference to
+                                  a secret key in an arbitrary namespace.
                                 properties:
                                   key:
                                     description: The key to select.
@@ -168,11 +167,14 @@ spec:
                                 - name
                                 - namespace
                                 type: object
-                              username:
-                                description: The username to authenticate.
+                              passwordWo:
                                 type: string
-                            required:
-                            - passwordSecretRef
+                              passwordWoVersion:
+                                type: string
+                              username:
+                                description: A unique resource name for this UptimeCheckConfig.
+                                  The format is projects/[PROJECT_ID]/uptimeCheckConfigs/[UPTIME_CHECK_ID].
+                                type: string
                             type: object
                           type: array
                         body:
@@ -278,6 +280,10 @@ spec:
                           type: boolean
                       type: object
                     type: array
+                  logCheckFailures:
+                    description: Specifies whether to log the results of failed probes
+                      to Cloud Logging.
+                    type: boolean
                   monitoredResource:
                     description: |-
                       The [monitored resource]
@@ -645,8 +651,31 @@ spec:
                             Structure is documented below.
                           items:
                             properties:
+                              passwordSecretRef:
+                                description: A SecretKeySelector is a reference to
+                                  a secret key in an arbitrary namespace.
+                                properties:
+                                  key:
+                                    description: The key to select.
+                                    type: string
+                                  name:
+                                    description: Name of the secret.
+                                    type: string
+                                  namespace:
+                                    description: Namespace of the secret.
+                                    type: string
+                                required:
+                                - key
+                                - name
+                                - namespace
+                                type: object
+                              passwordWo:
+                                type: string
+                              passwordWoVersion:
+                                type: string
                               username:
-                                description: The username to authenticate.
+                                description: A unique resource name for this UptimeCheckConfig.
+                                  The format is projects/[PROJECT_ID]/uptimeCheckConfigs/[UPTIME_CHECK_ID].
                                 type: string
                             type: object
                           type: array
@@ -753,6 +782,10 @@ spec:
                           type: boolean
                       type: object
                     type: array
+                  logCheckFailures:
+                    description: Specifies whether to log the results of failed probes
+                      to Cloud Logging.
+                    type: boolean
                   monitoredResource:
                     description: |-
                       The [monitored resource]
@@ -1097,93 +1130,12 @@ spec:
                 required:
                 - name
                 type: object
-              publishConnectionDetailsTo:
-                description: |-
-                  PublishConnectionDetailsTo specifies the connection secret config which
-                  contains a name, metadata and a reference to secret store config to
-                  which any connection details for this managed resource should be written.
-                  Connection details frequently include the endpoint, username,
-                  and password required to connect to the managed resource.
-                properties:
-                  configRef:
-                    default:
-                      name: default
-                    description: |-
-                      SecretStoreConfigRef specifies which secret store config should be used
-                      for this ConnectionSecret.
-                    properties:
-                      name:
-                        description: Name of the referenced object.
-                        type: string
-                      policy:
-                        description: Policies for referencing.
-                        properties:
-                          resolution:
-                            default: Required
-                            description: |-
-                              Resolution specifies whether resolution of this reference is required.
-                              The default is 'Required', which means the reconcile will fail if the
-                              reference cannot be resolved. 'Optional' means this reference will be
-                              a no-op if it cannot be resolved.
-                            enum:
-                            - Required
-                            - Optional
-                            type: string
-                          resolve:
-                            description: |-
-                              Resolve specifies when this reference should be resolved. The default
-                              is 'IfNotPresent', which will attempt to resolve the reference only when
-                              the corresponding field is not present. Use 'Always' to resolve the
-                              reference on every reconcile.
-                            enum:
-                            - Always
-                            - IfNotPresent
-                            type: string
-                        type: object
-                    required:
-                    - name
-                    type: object
-                  metadata:
-                    description: Metadata is the metadata for connection secret.
-                    properties:
-                      annotations:
-                        additionalProperties:
-                          type: string
-                        description: |-
-                          Annotations are the annotations to be added to connection secret.
-                          - For Kubernetes secrets, this will be used as "metadata.annotations".
-                          - It is up to Secret Store implementation for others store types.
-                        type: object
-                      labels:
-                        additionalProperties:
-                          type: string
-                        description: |-
-                          Labels are the labels/tags to be added to connection secret.
-                          - For Kubernetes secrets, this will be used as "metadata.labels".
-                          - It is up to Secret Store implementation for others store types.
-                        type: object
-                      type:
-                        description: |-
-                          Type is the SecretType for the connection secret.
-                          - Only valid for Kubernetes Secret Stores.
-                        type: string
-                    type: object
-                  name:
-                    description: Name is the name of the connection secret.
-                    type: string
-                required:
-                - name
-                type: object
               writeConnectionSecretToRef:
                 description: |-
                   WriteConnectionSecretToReference specifies the namespace and name of a
                   Secret to which any connection details for this managed resource should
                   be written. Connection details frequently include the endpoint, username,
                   and password required to connect to the managed resource.
-                  This field is planned to be replaced in a future release in favor of
-                  PublishConnectionDetailsTo. Currently, both could be set independently
-                  and connection details would be published to both without affecting
-                  each other.
                 properties:
                   name:
                     description: Name of the secret.
@@ -1288,8 +1240,13 @@ spec:
                             Structure is documented below.
                           items:
                             properties:
+                              passwordWo:
+                                type: string
+                              passwordWoVersion:
+                                type: string
                               username:
-                                description: The username to authenticate.
+                                description: A unique resource name for this UptimeCheckConfig.
+                                  The format is projects/[PROJECT_ID]/uptimeCheckConfigs/[UPTIME_CHECK_ID].
                                 type: string
                             type: object
                           type: array
@@ -1399,6 +1356,10 @@ spec:
                   id:
                     description: an identifier for the resource with format {{name}}
                     type: string
+                  logCheckFailures:
+                    description: Specifies whether to log the results of failed probes
+                      to Cloud Logging.
+                    type: boolean
                   monitoredResource:
                     description: |-
                       The [monitored resource]
@@ -1720,9 +1681,8 @@ spec:
                           Structure is documented below.
                         properties:
                           passwordSecretRef:
-                            description: |-
-                              The password to authenticate.
-                              Note: This property is sensitive and will not be displayed in the plan.
+                            description: A SecretKeySelector is a reference to a secret
+                              key in an arbitrary namespace.
                             properties:
                               key:
                                 description: The key to select.
@@ -1738,8 +1698,13 @@ spec:
                             - name
                             - namespace
                             type: object
+                          passwordWo:
+                            type: string
+                          passwordWoVersion:
+                            type: string
                           username:
-                            description: The username to authenticate.
+                            description: A unique resource name for this UptimeCheckConfig.
+                              The format is projects/[PROJECT_ID]/uptimeCheckConfigs/[UPTIME_CHECK_ID].
                             type: string
                         type: object
                       body:
@@ -1838,6 +1803,10 @@ spec:
                           use_ssl is false, setting validate_ssl to true has no effect.
                         type: boolean
                     type: object
+                  logCheckFailures:
+                    description: Specifies whether to log the results of failed probes
+                      to Cloud Logging.
+                    type: boolean
                   monitoredResource:
                     description: |-
                       The [monitored resource]
@@ -2189,9 +2158,8 @@ spec:
                           Structure is documented below.
                         properties:
                           passwordSecretRef:
-                            description: |-
-                              The password to authenticate.
-                              Note: This property is sensitive and will not be displayed in the plan.
+                            description: A SecretKeySelector is a reference to a secret
+                              key in an arbitrary namespace.
                             properties:
                               key:
                                 description: The key to select.
@@ -2207,11 +2175,14 @@ spec:
                             - name
                             - namespace
                             type: object
-                          username:
-                            description: The username to authenticate.
+                          passwordWo:
                             type: string
-                        required:
-                        - passwordSecretRef
+                          passwordWoVersion:
+                            type: string
+                          username:
+                            description: A unique resource name for this UptimeCheckConfig.
+                              The format is projects/[PROJECT_ID]/uptimeCheckConfigs/[UPTIME_CHECK_ID].
+                            type: string
                         type: object
                       body:
                         description: The request body associated with the HTTP POST
@@ -2309,6 +2280,10 @@ spec:
                           use_ssl is false, setting validate_ssl to true has no effect.
                         type: boolean
                     type: object
+                  logCheckFailures:
+                    description: Specifies whether to log the results of failed probes
+                      to Cloud Logging.
+                    type: boolean
                   monitoredResource:
                     description: |-
                       The [monitored resource]
@@ -2641,93 +2616,12 @@ spec:
                 required:
                 - name
                 type: object
-              publishConnectionDetailsTo:
-                description: |-
-                  PublishConnectionDetailsTo specifies the connection secret config which
-                  contains a name, metadata and a reference to secret store config to
-                  which any connection details for this managed resource should be written.
-                  Connection details frequently include the endpoint, username,
-                  and password required to connect to the managed resource.
-                properties:
-                  configRef:
-                    default:
-                      name: default
-                    description: |-
-                      SecretStoreConfigRef specifies which secret store config should be used
-                      for this ConnectionSecret.
-                    properties:
-                      name:
-                        description: Name of the referenced object.
-                        type: string
-                      policy:
-                        description: Policies for referencing.
-                        properties:
-                          resolution:
-                            default: Required
-                            description: |-
-                              Resolution specifies whether resolution of this reference is required.
-                              The default is 'Required', which means the reconcile will fail if the
-                              reference cannot be resolved. 'Optional' means this reference will be
-                              a no-op if it cannot be resolved.
-                            enum:
-                            - Required
-                            - Optional
-                            type: string
-                          resolve:
-                            description: |-
-                              Resolve specifies when this reference should be resolved. The default
-                              is 'IfNotPresent', which will attempt to resolve the reference only when
-                              the corresponding field is not present. Use 'Always' to resolve the
-                              reference on every reconcile.
-                            enum:
-                            - Always
-                            - IfNotPresent
-                            type: string
-                        type: object
-                    required:
-                    - name
-                    type: object
-                  metadata:
-                    description: Metadata is the metadata for connection secret.
-                    properties:
-                      annotations:
-                        additionalProperties:
-                          type: string
-                        description: |-
-                          Annotations are the annotations to be added to connection secret.
-                          - For Kubernetes secrets, this will be used as "metadata.annotations".
-                          - It is up to Secret Store implementation for others store types.
-                        type: object
-                      labels:
-                        additionalProperties:
-                          type: string
-                        description: |-
-                          Labels are the labels/tags to be added to connection secret.
-                          - For Kubernetes secrets, this will be used as "metadata.labels".
-                          - It is up to Secret Store implementation for others store types.
-                        type: object
-                      type:
-                        description: |-
-                          Type is the SecretType for the connection secret.
-                          - Only valid for Kubernetes Secret Stores.
-                        type: string
-                    type: object
-                  name:
-                    description: Name is the name of the connection secret.
-                    type: string
-                required:
-                - name
-                type: object
               writeConnectionSecretToRef:
                 description: |-
                   WriteConnectionSecretToReference specifies the namespace and name of a
                   Secret to which any connection details for this managed resource should
                   be written. Connection details frequently include the endpoint, username,
                   and password required to connect to the managed resource.
-                  This field is planned to be replaced in a future release in favor of
-                  PublishConnectionDetailsTo. Currently, both could be set independently
-                  and connection details would be published to both without affecting
-                  each other.
                 properties:
                   name:
                     description: Name of the secret.
@@ -2827,8 +2721,13 @@ spec:
                           The authentication information using username and password. Optional when creating an HTTP check; defaults to empty. Do not use with other authentication fields.
                           Structure is documented below.
                         properties:
+                          passwordWo:
+                            type: string
+                          passwordWoVersion:
+                            type: string
                           username:
-                            description: The username to authenticate.
+                            description: A unique resource name for this UptimeCheckConfig.
+                              The format is projects/[PROJECT_ID]/uptimeCheckConfigs/[UPTIME_CHECK_ID].
                             type: string
                         type: object
                       body:
@@ -2930,6 +2829,10 @@ spec:
                   id:
                     description: an identifier for the resource with format {{name}}
                     type: string
+                  logCheckFailures:
+                    description: Specifies whether to log the results of failed probes
+                      to Cloud Logging.
+                    type: boolean
                   monitoredResource:
                     description: |-
                       The [monitored resource]

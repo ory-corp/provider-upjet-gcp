@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.18.0
   name: securitypolicies.compute.gcp.upbound.io
 spec:
   group: compute.gcp.upbound.io
@@ -91,6 +91,78 @@ spec:
                               ruleVisibility:
                                 description: 'Rule visibility can be one of the following:'
                                 type: string
+                              thresholdConfigs:
+                                description: Configuration options for layer7 adaptive
+                                  protection for various customizable thresholds.
+                                  Structure is documented below.
+                                items:
+                                  properties:
+                                    autoDeployConfidenceThreshold:
+                                      description: Confidence threshold above which
+                                        Adaptive Protection's auto-deploy takes actions.
+                                      type: number
+                                    autoDeployExpirationSec:
+                                      description: Duration over which Adaptive Protection's
+                                        auto-deployed actions last.
+                                      type: number
+                                    autoDeployImpactedBaselineThreshold:
+                                      description: Impacted baseline threshold below
+                                        which Adaptive Protection's auto-deploy takes
+                                        actions.
+                                      type: number
+                                    autoDeployLoadThreshold:
+                                      description: Load threshold above which Adaptive
+                                        Protection automatically deploy threshold
+                                        based on the backend load threshold and detect
+                                        a new rule during an alerted attack.
+                                      type: number
+                                    detectionAbsoluteQps:
+                                      description: Detection threshold based on absolute
+                                        QPS.
+                                      type: number
+                                    detectionLoadThreshold:
+                                      description: Detection threshold based on the
+                                        backend service's load.
+                                      type: number
+                                    detectionRelativeToBaselineQps:
+                                      description: Detection threshold based on QPS
+                                        relative to the average of baseline traffic.
+                                      type: number
+                                    name:
+                                      description: The name of config. The name must
+                                        be 1-63 characters long, and comply with RFC1035.
+                                        The name must be unique within the security
+                                        policy.
+                                      type: string
+                                    trafficGranularityConfigs:
+                                      description: Configuration options for enabling
+                                        Adaptive Protection to work on the specified
+                                        service granularity. Structure is documented
+                                        below.
+                                      items:
+                                        properties:
+                                          enableEachUniqueValue:
+                                            description: If enabled, traffic matching
+                                              each unique value for the specified
+                                              type constitutes a separate traffic
+                                              unit. It can only be set to true if
+                                              value is empty.
+                                            type: boolean
+                                          type:
+                                            description: The type indicates the intended
+                                              use of the security policy. This field
+                                              can be set only at resource creation
+                                              time.
+                                            type: string
+                                          value:
+                                            description: Requests that match this
+                                              value constitute a granular traffic
+                                              unit.
+                                            type: string
+                                        type: object
+                                      type: array
+                                  type: object
+                                type: array
                             type: object
                           type: array
                       type: object
@@ -279,6 +351,112 @@ spec:
                                 type: string
                             type: object
                           type: array
+                        preconfiguredWafConfig:
+                          description: Preconfigured WAF configuration to be applied
+                            for the rule. If the rule does not evaluate preconfigured
+                            WAF rules, i.e., if evaluatePreconfiguredWaf() is not
+                            used, this field will have no effect. Structure is documented
+                            below.
+                          items:
+                            properties:
+                              exclusion:
+                                description: An exclusion to apply during preconfigured
+                                  WAF evaluation. Structure is documented below.
+                                items:
+                                  properties:
+                                    requestCookie:
+                                      description: Request cookie whose value will
+                                        be excluded from inspection during preconfigured
+                                        WAF evaluation. Structure is documented below.
+                                      items:
+                                        properties:
+                                          operator:
+                                            description: You can specify an exact
+                                              match or a partial match by using a
+                                              field operator and a field value.
+                                            type: string
+                                          value:
+                                            description: Requests that match this
+                                              value constitute a granular traffic
+                                              unit.
+                                            type: string
+                                        type: object
+                                      type: array
+                                    requestHeader:
+                                      description: Request header whose value will
+                                        be excluded from inspection during preconfigured
+                                        WAF evaluation. Structure is documented below.
+                                      items:
+                                        properties:
+                                          operator:
+                                            description: You can specify an exact
+                                              match or a partial match by using a
+                                              field operator and a field value.
+                                            type: string
+                                          value:
+                                            description: Requests that match this
+                                              value constitute a granular traffic
+                                              unit.
+                                            type: string
+                                        type: object
+                                      type: array
+                                    requestQueryParam:
+                                      description: Request query parameter whose value
+                                        will be excluded from inspection during preconfigured
+                                        WAF evaluation. Note that the parameter can
+                                        be in the query string or in the POST body.
+                                        Structure is documented below.
+                                      items:
+                                        properties:
+                                          operator:
+                                            description: You can specify an exact
+                                              match or a partial match by using a
+                                              field operator and a field value.
+                                            type: string
+                                          value:
+                                            description: Requests that match this
+                                              value constitute a granular traffic
+                                              unit.
+                                            type: string
+                                        type: object
+                                      type: array
+                                    requestUri:
+                                      description: Request URI from the request line
+                                        to be excluded from inspection during preconfigured
+                                        WAF evaluation. When specifying this field,
+                                        the query or fragment part should be excluded.
+                                        Structure is documented below.
+                                      items:
+                                        properties:
+                                          operator:
+                                            description: You can specify an exact
+                                              match or a partial match by using a
+                                              field operator and a field value.
+                                            type: string
+                                          value:
+                                            description: Requests that match this
+                                              value constitute a granular traffic
+                                              unit.
+                                            type: string
+                                        type: object
+                                      type: array
+                                    targetRuleIds:
+                                      description: A list of target rule IDs under
+                                        the WAF rule set to apply the preconfigured
+                                        WAF exclusion. If omitted, it refers to all
+                                        the rule IDs under the WAF rule set.
+                                      items:
+                                        type: string
+                                      type: array
+                                      x-kubernetes-list-type: set
+                                    targetRuleSet:
+                                      description: Target WAF rule set to apply the
+                                        preconfigured WAF exclusion.
+                                      type: string
+                                  type: object
+                                type: array
+                            type: object
+                          type: array
                         preview:
                           description: |-
                             When set to true, the action specified above is not enforced.
@@ -326,6 +504,27 @@ spec:
                                 description: Determines the key to enforce the rate_limit_threshold
                                   on. If not specified, defaults to ALL.
                                 type: string
+                              enforceOnKeyConfigs:
+                                description: If specified, any combination of values
+                                  of enforce_on_key_type/enforce_on_key_name is treated
+                                  as the key on which rate limit threshold/action
+                                  is enforced. You can specify up to 3 enforce_on_key_configs.
+                                  If enforce_on_key_configs is specified, enforce_on_key
+                                  must be set to an empty string. Structure is documented
+                                  below.
+                                items:
+                                  properties:
+                                    enforceOnKeyName:
+                                      description: 'Rate limit key name applicable
+                                        only for the following key types:'
+                                      type: string
+                                    enforceOnKeyType:
+                                      description: Determines the key to enforce the
+                                        rate_limit_threshold on. If not specified,
+                                        defaults to ALL.
+                                      type: string
+                                  type: object
+                                type: array
                               enforceOnKeyName:
                                 description: 'Rate limit key name applicable only
                                   for the following key types:'
@@ -336,16 +535,20 @@ spec:
                                   Valid options are deny() where valid values for status are 403, 404, 429, and 502.
                                 type: string
                               exceedRedirectOptions:
-                                description: 'block supports:'
+                                description: Parameters defining the redirect action
+                                  that is used as the exceed action. Cannot be specified
+                                  if the exceed action is not redirect. Structure
+                                  is documented below.
                                 items:
                                   properties:
                                     target:
-                                      description: Target for the redirect action.
-                                        This is required if the type is EXTERNAL_302
-                                        and cannot be specified for GOOGLE_RECAPTCHA.
+                                      description: External redirection target when
+                                        EXTERNAL_302 is set in type.
                                       type: string
                                     type:
-                                      description: Type of the redirect action.
+                                      description: The type indicates the intended
+                                        use of the security policy. This field can
+                                        be set only at resource creation time.
                                       type: string
                                   type: object
                                 type: array
@@ -373,12 +576,13 @@ spec:
                           items:
                             properties:
                               target:
-                                description: Target for the redirect action. This
-                                  is required if the type is EXTERNAL_302 and cannot
-                                  be specified for GOOGLE_RECAPTCHA.
+                                description: External redirection target when EXTERNAL_302
+                                  is set in type.
                                 type: string
                               type:
-                                description: Type of the redirect action.
+                                description: The type indicates the intended use of
+                                  the security policy. This field can be set only
+                                  at resource creation time.
                                 type: string
                             type: object
                           type: array
@@ -420,6 +624,78 @@ spec:
                               ruleVisibility:
                                 description: 'Rule visibility can be one of the following:'
                                 type: string
+                              thresholdConfigs:
+                                description: Configuration options for layer7 adaptive
+                                  protection for various customizable thresholds.
+                                  Structure is documented below.
+                                items:
+                                  properties:
+                                    autoDeployConfidenceThreshold:
+                                      description: Confidence threshold above which
+                                        Adaptive Protection's auto-deploy takes actions.
+                                      type: number
+                                    autoDeployExpirationSec:
+                                      description: Duration over which Adaptive Protection's
+                                        auto-deployed actions last.
+                                      type: number
+                                    autoDeployImpactedBaselineThreshold:
+                                      description: Impacted baseline threshold below
+                                        which Adaptive Protection's auto-deploy takes
+                                        actions.
+                                      type: number
+                                    autoDeployLoadThreshold:
+                                      description: Load threshold above which Adaptive
+                                        Protection automatically deploy threshold
+                                        based on the backend load threshold and detect
+                                        a new rule during an alerted attack.
+                                      type: number
+                                    detectionAbsoluteQps:
+                                      description: Detection threshold based on absolute
+                                        QPS.
+                                      type: number
+                                    detectionLoadThreshold:
+                                      description: Detection threshold based on the
+                                        backend service's load.
+                                      type: number
+                                    detectionRelativeToBaselineQps:
+                                      description: Detection threshold based on QPS
+                                        relative to the average of baseline traffic.
+                                      type: number
+                                    name:
+                                      description: The name of config. The name must
+                                        be 1-63 characters long, and comply with RFC1035.
+                                        The name must be unique within the security
+                                        policy.
+                                      type: string
+                                    trafficGranularityConfigs:
+                                      description: Configuration options for enabling
+                                        Adaptive Protection to work on the specified
+                                        service granularity. Structure is documented
+                                        below.
+                                      items:
+                                        properties:
+                                          enableEachUniqueValue:
+                                            description: If enabled, traffic matching
+                                              each unique value for the specified
+                                              type constitutes a separate traffic
+                                              unit. It can only be set to true if
+                                              value is empty.
+                                            type: boolean
+                                          type:
+                                            description: The type indicates the intended
+                                              use of the security policy. This field
+                                              can be set only at resource creation
+                                              time.
+                                            type: string
+                                          value:
+                                            description: Requests that match this
+                                              value constitute a granular traffic
+                                              unit.
+                                            type: string
+                                        type: object
+                                      type: array
+                                  type: object
+                                type: array
                             type: object
                           type: array
                       type: object
@@ -608,6 +884,112 @@ spec:
                                 type: string
                             type: object
                           type: array
+                        preconfiguredWafConfig:
+                          description: Preconfigured WAF configuration to be applied
+                            for the rule. If the rule does not evaluate preconfigured
+                            WAF rules, i.e., if evaluatePreconfiguredWaf() is not
+                            used, this field will have no effect. Structure is documented
+                            below.
+                          items:
+                            properties:
+                              exclusion:
+                                description: An exclusion to apply during preconfigured
+                                  WAF evaluation. Structure is documented below.
+                                items:
+                                  properties:
+                                    requestCookie:
+                                      description: Request cookie whose value will
+                                        be excluded from inspection during preconfigured
+                                        WAF evaluation. Structure is documented below.
+                                      items:
+                                        properties:
+                                          operator:
+                                            description: You can specify an exact
+                                              match or a partial match by using a
+                                              field operator and a field value.
+                                            type: string
+                                          value:
+                                            description: Requests that match this
+                                              value constitute a granular traffic
+                                              unit.
+                                            type: string
+                                        type: object
+                                      type: array
+                                    requestHeader:
+                                      description: Request header whose value will
+                                        be excluded from inspection during preconfigured
+                                        WAF evaluation. Structure is documented below.
+                                      items:
+                                        properties:
+                                          operator:
+                                            description: You can specify an exact
+                                              match or a partial match by using a
+                                              field operator and a field value.
+                                            type: string
+                                          value:
+                                            description: Requests that match this
+                                              value constitute a granular traffic
+                                              unit.
+                                            type: string
+                                        type: object
+                                      type: array
+                                    requestQueryParam:
+                                      description: Request query parameter whose value
+                                        will be excluded from inspection during preconfigured
+                                        WAF evaluation. Note that the parameter can
+                                        be in the query string or in the POST body.
+                                        Structure is documented below.
+                                      items:
+                                        properties:
+                                          operator:
+                                            description: You can specify an exact
+                                              match or a partial match by using a
+                                              field operator and a field value.
+                                            type: string
+                                          value:
+                                            description: Requests that match this
+                                              value constitute a granular traffic
+                                              unit.
+                                            type: string
+                                        type: object
+                                      type: array
+                                    requestUri:
+                                      description: Request URI from the request line
+                                        to be excluded from inspection during preconfigured
+                                        WAF evaluation. When specifying this field,
+                                        the query or fragment part should be excluded.
+                                        Structure is documented below.
+                                      items:
+                                        properties:
+                                          operator:
+                                            description: You can specify an exact
+                                              match or a partial match by using a
+                                              field operator and a field value.
+                                            type: string
+                                          value:
+                                            description: Requests that match this
+                                              value constitute a granular traffic
+                                              unit.
+                                            type: string
+                                        type: object
+                                      type: array
+                                    targetRuleIds:
+                                      description: A list of target rule IDs under
+                                        the WAF rule set to apply the preconfigured
+                                        WAF exclusion. If omitted, it refers to all
+                                        the rule IDs under the WAF rule set.
+                                      items:
+                                        type: string
+                                      type: array
+                                      x-kubernetes-list-type: set
+                                    targetRuleSet:
+                                      description: Target WAF rule set to apply the
+                                        preconfigured WAF exclusion.
+                                      type: string
+                                  type: object
+                                type: array
+                            type: object
+                          type: array
                         preview:
                           description: |-
                             When set to true, the action specified above is not enforced.
@@ -655,6 +1037,27 @@ spec:
                                 description: Determines the key to enforce the rate_limit_threshold
                                   on. If not specified, defaults to ALL.
                                 type: string
+                              enforceOnKeyConfigs:
+                                description: If specified, any combination of values
+                                  of enforce_on_key_type/enforce_on_key_name is treated
+                                  as the key on which rate limit threshold/action
+                                  is enforced. You can specify up to 3 enforce_on_key_configs.
+                                  If enforce_on_key_configs is specified, enforce_on_key
+                                  must be set to an empty string. Structure is documented
+                                  below.
+                                items:
+                                  properties:
+                                    enforceOnKeyName:
+                                      description: 'Rate limit key name applicable
+                                        only for the following key types:'
+                                      type: string
+                                    enforceOnKeyType:
+                                      description: Determines the key to enforce the
+                                        rate_limit_threshold on. If not specified,
+                                        defaults to ALL.
+                                      type: string
+                                  type: object
+                                type: array
                               enforceOnKeyName:
                                 description: 'Rate limit key name applicable only
                                   for the following key types:'
@@ -665,16 +1068,20 @@ spec:
                                   Valid options are deny() where valid values for status are 403, 404, 429, and 502.
                                 type: string
                               exceedRedirectOptions:
-                                description: 'block supports:'
+                                description: Parameters defining the redirect action
+                                  that is used as the exceed action. Cannot be specified
+                                  if the exceed action is not redirect. Structure
+                                  is documented below.
                                 items:
                                   properties:
                                     target:
-                                      description: Target for the redirect action.
-                                        This is required if the type is EXTERNAL_302
-                                        and cannot be specified for GOOGLE_RECAPTCHA.
+                                      description: External redirection target when
+                                        EXTERNAL_302 is set in type.
                                       type: string
                                     type:
-                                      description: Type of the redirect action.
+                                      description: The type indicates the intended
+                                        use of the security policy. This field can
+                                        be set only at resource creation time.
                                       type: string
                                   type: object
                                 type: array
@@ -702,12 +1109,13 @@ spec:
                           items:
                             properties:
                               target:
-                                description: Target for the redirect action. This
-                                  is required if the type is EXTERNAL_302 and cannot
-                                  be specified for GOOGLE_RECAPTCHA.
+                                description: External redirection target when EXTERNAL_302
+                                  is set in type.
                                 type: string
                               type:
-                                description: Type of the redirect action.
+                                description: The type indicates the intended use of
+                                  the security policy. This field can be set only
+                                  at resource creation time.
                                 type: string
                             type: object
                           type: array
@@ -784,93 +1192,12 @@ spec:
                 required:
                 - name
                 type: object
-              publishConnectionDetailsTo:
-                description: |-
-                  PublishConnectionDetailsTo specifies the connection secret config which
-                  contains a name, metadata and a reference to secret store config to
-                  which any connection details for this managed resource should be written.
-                  Connection details frequently include the endpoint, username,
-                  and password required to connect to the managed resource.
-                properties:
-                  configRef:
-                    default:
-                      name: default
-                    description: |-
-                      SecretStoreConfigRef specifies which secret store config should be used
-                      for this ConnectionSecret.
-                    properties:
-                      name:
-                        description: Name of the referenced object.
-                        type: string
-                      policy:
-                        description: Policies for referencing.
-                        properties:
-                          resolution:
-                            default: Required
-                            description: |-
-                              Resolution specifies whether resolution of this reference is required.
-                              The default is 'Required', which means the reconcile will fail if the
-                              reference cannot be resolved. 'Optional' means this reference will be
-                              a no-op if it cannot be resolved.
-                            enum:
-                            - Required
-                            - Optional
-                            type: string
-                          resolve:
-                            description: |-
-                              Resolve specifies when this reference should be resolved. The default
-                              is 'IfNotPresent', which will attempt to resolve the reference only when
-                              the corresponding field is not present. Use 'Always' to resolve the
-                              reference on every reconcile.
-                            enum:
-                            - Always
-                            - IfNotPresent
-                            type: string
-                        type: object
-                    required:
-                    - name
-                    type: object
-                  metadata:
-                    description: Metadata is the metadata for connection secret.
-                    properties:
-                      annotations:
-                        additionalProperties:
-                          type: string
-                        description: |-
-                          Annotations are the annotations to be added to connection secret.
-                          - For Kubernetes secrets, this will be used as "metadata.annotations".
-                          - It is up to Secret Store implementation for others store types.
-                        type: object
-                      labels:
-                        additionalProperties:
-                          type: string
-                        description: |-
-                          Labels are the labels/tags to be added to connection secret.
-                          - For Kubernetes secrets, this will be used as "metadata.labels".
-                          - It is up to Secret Store implementation for others store types.
-                        type: object
-                      type:
-                        description: |-
-                          Type is the SecretType for the connection secret.
-                          - Only valid for Kubernetes Secret Stores.
-                        type: string
-                    type: object
-                  name:
-                    description: Name is the name of the connection secret.
-                    type: string
-                required:
-                - name
-                type: object
               writeConnectionSecretToRef:
                 description: |-
                   WriteConnectionSecretToReference specifies the namespace and name of a
                   Secret to which any connection details for this managed resource should
                   be written. Connection details frequently include the endpoint, username,
                   and password required to connect to the managed resource.
-                  This field is planned to be replaced in a future release in favor of
-                  PublishConnectionDetailsTo. Currently, both could be set independently
-                  and connection details would be published to both without affecting
-                  each other.
                 properties:
                   name:
                     description: Name of the secret.
@@ -908,6 +1235,78 @@ spec:
                               ruleVisibility:
                                 description: 'Rule visibility can be one of the following:'
                                 type: string
+                              thresholdConfigs:
+                                description: Configuration options for layer7 adaptive
+                                  protection for various customizable thresholds.
+                                  Structure is documented below.
+                                items:
+                                  properties:
+                                    autoDeployConfidenceThreshold:
+                                      description: Confidence threshold above which
+                                        Adaptive Protection's auto-deploy takes actions.
+                                      type: number
+                                    autoDeployExpirationSec:
+                                      description: Duration over which Adaptive Protection's
+                                        auto-deployed actions last.
+                                      type: number
+                                    autoDeployImpactedBaselineThreshold:
+                                      description: Impacted baseline threshold below
+                                        which Adaptive Protection's auto-deploy takes
+                                        actions.
+                                      type: number
+                                    autoDeployLoadThreshold:
+                                      description: Load threshold above which Adaptive
+                                        Protection automatically deploy threshold
+                                        based on the backend load threshold and detect
+                                        a new rule during an alerted attack.
+                                      type: number
+                                    detectionAbsoluteQps:
+                                      description: Detection threshold based on absolute
+                                        QPS.
+                                      type: number
+                                    detectionLoadThreshold:
+                                      description: Detection threshold based on the
+                                        backend service's load.
+                                      type: number
+                                    detectionRelativeToBaselineQps:
+                                      description: Detection threshold based on QPS
+                                        relative to the average of baseline traffic.
+                                      type: number
+                                    name:
+                                      description: The name of config. The name must
+                                        be 1-63 characters long, and comply with RFC1035.
+                                        The name must be unique within the security
+                                        policy.
+                                      type: string
+                                    trafficGranularityConfigs:
+                                      description: Configuration options for enabling
+                                        Adaptive Protection to work on the specified
+                                        service granularity. Structure is documented
+                                        below.
+                                      items:
+                                        properties:
+                                          enableEachUniqueValue:
+                                            description: If enabled, traffic matching
+                                              each unique value for the specified
+                                              type constitutes a separate traffic
+                                              unit. It can only be set to true if
+                                              value is empty.
+                                            type: boolean
+                                          type:
+                                            description: The type indicates the intended
+                                              use of the security policy. This field
+                                              can be set only at resource creation
+                                              time.
+                                            type: string
+                                          value:
+                                            description: Requests that match this
+                                              value constitute a granular traffic
+                                              unit.
+                                            type: string
+                                        type: object
+                                      type: array
+                                  type: object
+                                type: array
                             type: object
                           type: array
                       type: object
@@ -1102,6 +1501,112 @@ spec:
                                 type: string
                             type: object
                           type: array
+                        preconfiguredWafConfig:
+                          description: Preconfigured WAF configuration to be applied
+                            for the rule. If the rule does not evaluate preconfigured
+                            WAF rules, i.e., if evaluatePreconfiguredWaf() is not
+                            used, this field will have no effect. Structure is documented
+                            below.
+                          items:
+                            properties:
+                              exclusion:
+                                description: An exclusion to apply during preconfigured
+                                  WAF evaluation. Structure is documented below.
+                                items:
+                                  properties:
+                                    requestCookie:
+                                      description: Request cookie whose value will
+                                        be excluded from inspection during preconfigured
+                                        WAF evaluation. Structure is documented below.
+                                      items:
+                                        properties:
+                                          operator:
+                                            description: You can specify an exact
+                                              match or a partial match by using a
+                                              field operator and a field value.
+                                            type: string
+                                          value:
+                                            description: Requests that match this
+                                              value constitute a granular traffic
+                                              unit.
+                                            type: string
+                                        type: object
+                                      type: array
+                                    requestHeader:
+                                      description: Request header whose value will
+                                        be excluded from inspection during preconfigured
+                                        WAF evaluation. Structure is documented below.
+                                      items:
+                                        properties:
+                                          operator:
+                                            description: You can specify an exact
+                                              match or a partial match by using a
+                                              field operator and a field value.
+                                            type: string
+                                          value:
+                                            description: Requests that match this
+                                              value constitute a granular traffic
+                                              unit.
+                                            type: string
+                                        type: object
+                                      type: array
+                                    requestQueryParam:
+                                      description: Request query parameter whose value
+                                        will be excluded from inspection during preconfigured
+                                        WAF evaluation. Note that the parameter can
+                                        be in the query string or in the POST body.
+                                        Structure is documented below.
+                                      items:
+                                        properties:
+                                          operator:
+                                            description: You can specify an exact
+                                              match or a partial match by using a
+                                              field operator and a field value.
+                                            type: string
+                                          value:
+                                            description: Requests that match this
+                                              value constitute a granular traffic
+                                              unit.
+                                            type: string
+                                        type: object
+                                      type: array
+                                    requestUri:
+                                      description: Request URI from the request line
+                                        to be excluded from inspection during preconfigured
+                                        WAF evaluation. When specifying this field,
+                                        the query or fragment part should be excluded.
+                                        Structure is documented below.
+                                      items:
+                                        properties:
+                                          operator:
+                                            description: You can specify an exact
+                                              match or a partial match by using a
+                                              field operator and a field value.
+                                            type: string
+                                          value:
+                                            description: Requests that match this
+                                              value constitute a granular traffic
+                                              unit.
+                                            type: string
+                                        type: object
+                                      type: array
+                                    targetRuleIds:
+                                      description: A list of target rule IDs under
+                                        the WAF rule set to apply the preconfigured
+                                        WAF exclusion. If omitted, it refers to all
+                                        the rule IDs under the WAF rule set.
+                                      items:
+                                        type: string
+                                      type: array
+                                      x-kubernetes-list-type: set
+                                    targetRuleSet:
+                                      description: Target WAF rule set to apply the
+                                        preconfigured WAF exclusion.
+                                      type: string
+                                  type: object
+                                type: array
+                            type: object
+                          type: array
                         preview:
                           description: |-
                             When set to true, the action specified above is not enforced.
@@ -1149,6 +1654,27 @@ spec:
                                 description: Determines the key to enforce the rate_limit_threshold
                                   on. If not specified, defaults to ALL.
                                 type: string
+                              enforceOnKeyConfigs:
+                                description: If specified, any combination of values
+                                  of enforce_on_key_type/enforce_on_key_name is treated
+                                  as the key on which rate limit threshold/action
+                                  is enforced. You can specify up to 3 enforce_on_key_configs.
+                                  If enforce_on_key_configs is specified, enforce_on_key
+                                  must be set to an empty string. Structure is documented
+                                  below.
+                                items:
+                                  properties:
+                                    enforceOnKeyName:
+                                      description: 'Rate limit key name applicable
+                                        only for the following key types:'
+                                      type: string
+                                    enforceOnKeyType:
+                                      description: Determines the key to enforce the
+                                        rate_limit_threshold on. If not specified,
+                                        defaults to ALL.
+                                      type: string
+                                  type: object
+                                type: array
                               enforceOnKeyName:
                                 description: 'Rate limit key name applicable only
                                   for the following key types:'
@@ -1159,16 +1685,20 @@ spec:
                                   Valid options are deny() where valid values for status are 403, 404, 429, and 502.
                                 type: string
                               exceedRedirectOptions:
-                                description: 'block supports:'
+                                description: Parameters defining the redirect action
+                                  that is used as the exceed action. Cannot be specified
+                                  if the exceed action is not redirect. Structure
+                                  is documented below.
                                 items:
                                   properties:
                                     target:
-                                      description: Target for the redirect action.
-                                        This is required if the type is EXTERNAL_302
-                                        and cannot be specified for GOOGLE_RECAPTCHA.
+                                      description: External redirection target when
+                                        EXTERNAL_302 is set in type.
                                       type: string
                                     type:
-                                      description: Type of the redirect action.
+                                      description: The type indicates the intended
+                                        use of the security policy. This field can
+                                        be set only at resource creation time.
                                       type: string
                                   type: object
                                 type: array
@@ -1196,12 +1726,13 @@ spec:
                           items:
                             properties:
                               target:
-                                description: Target for the redirect action. This
-                                  is required if the type is EXTERNAL_302 and cannot
-                                  be specified for GOOGLE_RECAPTCHA.
+                                description: External redirection target when EXTERNAL_302
+                                  is set in type.
                                 type: string
                               type:
-                                description: Type of the redirect action.
+                                description: The type indicates the intended use of
+                                  the security policy. This field can be set only
+                                  at resource creation time.
                                 type: string
                             type: object
                           type: array
@@ -1347,6 +1878,72 @@ spec:
                           ruleVisibility:
                             description: 'Rule visibility can be one of the following:'
                             type: string
+                          thresholdConfigs:
+                            description: Configuration options for layer7 adaptive
+                              protection for various customizable thresholds. Structure
+                              is documented below.
+                            items:
+                              properties:
+                                autoDeployConfidenceThreshold:
+                                  description: Confidence threshold above which Adaptive
+                                    Protection's auto-deploy takes actions.
+                                  type: number
+                                autoDeployExpirationSec:
+                                  description: Duration over which Adaptive Protection's
+                                    auto-deployed actions last.
+                                  type: number
+                                autoDeployImpactedBaselineThreshold:
+                                  description: Impacted baseline threshold below which
+                                    Adaptive Protection's auto-deploy takes actions.
+                                  type: number
+                                autoDeployLoadThreshold:
+                                  description: Load threshold above which Adaptive
+                                    Protection automatically deploy threshold based
+                                    on the backend load threshold and detect a new
+                                    rule during an alerted attack.
+                                  type: number
+                                detectionAbsoluteQps:
+                                  description: Detection threshold based on absolute
+                                    QPS.
+                                  type: number
+                                detectionLoadThreshold:
+                                  description: Detection threshold based on the backend
+                                    service's load.
+                                  type: number
+                                detectionRelativeToBaselineQps:
+                                  description: Detection threshold based on QPS relative
+                                    to the average of baseline traffic.
+                                  type: number
+                                name:
+                                  description: The name of config. The name must be
+                                    1-63 characters long, and comply with RFC1035.
+                                    The name must be unique within the security policy.
+                                  type: string
+                                trafficGranularityConfigs:
+                                  description: Configuration options for enabling
+                                    Adaptive Protection to work on the specified service
+                                    granularity. Structure is documented below.
+                                  items:
+                                    properties:
+                                      enableEachUniqueValue:
+                                        description: If enabled, traffic matching
+                                          each unique value for the specified type
+                                          constitutes a separate traffic unit. It
+                                          can only be set to true if value is empty.
+                                        type: boolean
+                                      type:
+                                        description: The type indicates the intended
+                                          use of the security policy. This field can
+                                          be set only at resource creation time.
+                                        type: string
+                                      value:
+                                        description: Requests that match this value
+                                          constitute a granular traffic unit.
+                                        type: string
+                                    type: object
+                                  type: array
+                              type: object
+                            type: array
                         type: object
                     type: object
                   advancedOptionsConfig:
@@ -1513,6 +2110,106 @@ spec:
                                 Available options:
                               type: string
                           type: object
+                        preconfiguredWafConfig:
+                          description: Preconfigured WAF configuration to be applied
+                            for the rule. If the rule does not evaluate preconfigured
+                            WAF rules, i.e., if evaluatePreconfiguredWaf() is not
+                            used, this field will have no effect. Structure is documented
+                            below.
+                          properties:
+                            exclusion:
+                              description: An exclusion to apply during preconfigured
+                                WAF evaluation. Structure is documented below.
+                              items:
+                                properties:
+                                  requestCookie:
+                                    description: Request cookie whose value will be
+                                      excluded from inspection during preconfigured
+                                      WAF evaluation. Structure is documented below.
+                                    items:
+                                      properties:
+                                        operator:
+                                          description: You can specify an exact match
+                                            or a partial match by using a field operator
+                                            and a field value.
+                                          type: string
+                                        value:
+                                          description: Requests that match this value
+                                            constitute a granular traffic unit.
+                                          type: string
+                                      type: object
+                                    type: array
+                                  requestHeader:
+                                    description: Request header whose value will be
+                                      excluded from inspection during preconfigured
+                                      WAF evaluation. Structure is documented below.
+                                    items:
+                                      properties:
+                                        operator:
+                                          description: You can specify an exact match
+                                            or a partial match by using a field operator
+                                            and a field value.
+                                          type: string
+                                        value:
+                                          description: Requests that match this value
+                                            constitute a granular traffic unit.
+                                          type: string
+                                      type: object
+                                    type: array
+                                  requestQueryParam:
+                                    description: Request query parameter whose value
+                                      will be excluded from inspection during preconfigured
+                                      WAF evaluation. Note that the parameter can
+                                      be in the query string or in the POST body.
+                                      Structure is documented below.
+                                    items:
+                                      properties:
+                                        operator:
+                                          description: You can specify an exact match
+                                            or a partial match by using a field operator
+                                            and a field value.
+                                          type: string
+                                        value:
+                                          description: Requests that match this value
+                                            constitute a granular traffic unit.
+                                          type: string
+                                      type: object
+                                    type: array
+                                  requestUri:
+                                    description: Request URI from the request line
+                                      to be excluded from inspection during preconfigured
+                                      WAF evaluation. When specifying this field,
+                                      the query or fragment part should be excluded.
+                                      Structure is documented below.
+                                    items:
+                                      properties:
+                                        operator:
+                                          description: You can specify an exact match
+                                            or a partial match by using a field operator
+                                            and a field value.
+                                          type: string
+                                        value:
+                                          description: Requests that match this value
+                                            constitute a granular traffic unit.
+                                          type: string
+                                      type: object
+                                    type: array
+                                  targetRuleIds:
+                                    description: A list of target rule IDs under the
+                                      WAF rule set to apply the preconfigured WAF
+                                      exclusion. If omitted, it refers to all the
+                                      rule IDs under the WAF rule set.
+                                    items:
+                                      type: string
+                                    type: array
+                                    x-kubernetes-list-type: set
+                                  targetRuleSet:
+                                    description: Target WAF rule set to apply the
+                                      preconfigured WAF exclusion.
+                                    type: string
+                                type: object
+                              type: array
+                          type: object
                         preview:
                           description: |-
                             When set to true, the action specified above is not enforced.
@@ -1557,6 +2254,27 @@ spec:
                               description: Determines the key to enforce the rate_limit_threshold
                                 on. If not specified, defaults to ALL.
                               type: string
+                            enforceOnKeyConfigs:
+                              description: If specified, any combination of values
+                                of enforce_on_key_type/enforce_on_key_name is treated
+                                as the key on which rate limit threshold/action is
+                                enforced. You can specify up to 3 enforce_on_key_configs.
+                                If enforce_on_key_configs is specified, enforce_on_key
+                                must be set to an empty string. Structure is documented
+                                below.
+                              items:
+                                properties:
+                                  enforceOnKeyName:
+                                    description: 'Rate limit key name applicable only
+                                      for the following key types:'
+                                    type: string
+                                  enforceOnKeyType:
+                                    description: Determines the key to enforce the
+                                      rate_limit_threshold on. If not specified, defaults
+                                      to ALL.
+                                    type: string
+                                type: object
+                              type: array
                             enforceOnKeyName:
                               description: 'Rate limit key name applicable only for
                                 the following key types:'
@@ -1567,15 +2285,19 @@ spec:
                                 Valid options are deny() where valid values for status are 403, 404, 429, and 502.
                               type: string
                             exceedRedirectOptions:
-                              description: 'block supports:'
+                              description: Parameters defining the redirect action
+                                that is used as the exceed action. Cannot be specified
+                                if the exceed action is not redirect. Structure is
+                                documented below.
                               properties:
                                 target:
-                                  description: Target for the redirect action. This
-                                    is required if the type is EXTERNAL_302 and cannot
-                                    be specified for GOOGLE_RECAPTCHA.
+                                  description: External redirection target when EXTERNAL_302
+                                    is set in type.
                                   type: string
                                 type:
-                                  description: Type of the redirect action.
+                                  description: The type indicates the intended use
+                                    of the security policy. This field can be set
+                                    only at resource creation time.
                                   type: string
                               type: object
                             rateLimitThreshold:
@@ -1598,12 +2320,13 @@ spec:
                             below.
                           properties:
                             target:
-                              description: Target for the redirect action. This is
-                                required if the type is EXTERNAL_302 and cannot be
-                                specified for GOOGLE_RECAPTCHA.
+                              description: External redirection target when EXTERNAL_302
+                                is set in type.
                               type: string
                             type:
-                              description: Type of the redirect action.
+                              description: The type indicates the intended use of
+                                the security policy. This field can be set only at
+                                resource creation time.
                               type: string
                           type: object
                       type: object
@@ -1642,6 +2365,72 @@ spec:
                           ruleVisibility:
                             description: 'Rule visibility can be one of the following:'
                             type: string
+                          thresholdConfigs:
+                            description: Configuration options for layer7 adaptive
+                              protection for various customizable thresholds. Structure
+                              is documented below.
+                            items:
+                              properties:
+                                autoDeployConfidenceThreshold:
+                                  description: Confidence threshold above which Adaptive
+                                    Protection's auto-deploy takes actions.
+                                  type: number
+                                autoDeployExpirationSec:
+                                  description: Duration over which Adaptive Protection's
+                                    auto-deployed actions last.
+                                  type: number
+                                autoDeployImpactedBaselineThreshold:
+                                  description: Impacted baseline threshold below which
+                                    Adaptive Protection's auto-deploy takes actions.
+                                  type: number
+                                autoDeployLoadThreshold:
+                                  description: Load threshold above which Adaptive
+                                    Protection automatically deploy threshold based
+                                    on the backend load threshold and detect a new
+                                    rule during an alerted attack.
+                                  type: number
+                                detectionAbsoluteQps:
+                                  description: Detection threshold based on absolute
+                                    QPS.
+                                  type: number
+                                detectionLoadThreshold:
+                                  description: Detection threshold based on the backend
+                                    service's load.
+                                  type: number
+                                detectionRelativeToBaselineQps:
+                                  description: Detection threshold based on QPS relative
+                                    to the average of baseline traffic.
+                                  type: number
+                                name:
+                                  description: The name of config. The name must be
+                                    1-63 characters long, and comply with RFC1035.
+                                    The name must be unique within the security policy.
+                                  type: string
+                                trafficGranularityConfigs:
+                                  description: Configuration options for enabling
+                                    Adaptive Protection to work on the specified service
+                                    granularity. Structure is documented below.
+                                  items:
+                                    properties:
+                                      enableEachUniqueValue:
+                                        description: If enabled, traffic matching
+                                          each unique value for the specified type
+                                          constitutes a separate traffic unit. It
+                                          can only be set to true if value is empty.
+                                        type: boolean
+                                      type:
+                                        description: The type indicates the intended
+                                          use of the security policy. This field can
+                                          be set only at resource creation time.
+                                        type: string
+                                      value:
+                                        description: Requests that match this value
+                                          constitute a granular traffic unit.
+                                        type: string
+                                    type: object
+                                  type: array
+                              type: object
+                            type: array
                         type: object
                     type: object
                   advancedOptionsConfig:
@@ -1808,6 +2597,106 @@ spec:
                                 Available options:
                               type: string
                           type: object
+                        preconfiguredWafConfig:
+                          description: Preconfigured WAF configuration to be applied
+                            for the rule. If the rule does not evaluate preconfigured
+                            WAF rules, i.e., if evaluatePreconfiguredWaf() is not
+                            used, this field will have no effect. Structure is documented
+                            below.
+                          properties:
+                            exclusion:
+                              description: An exclusion to apply during preconfigured
+                                WAF evaluation. Structure is documented below.
+                              items:
+                                properties:
+                                  requestCookie:
+                                    description: Request cookie whose value will be
+                                      excluded from inspection during preconfigured
+                                      WAF evaluation. Structure is documented below.
+                                    items:
+                                      properties:
+                                        operator:
+                                          description: You can specify an exact match
+                                            or a partial match by using a field operator
+                                            and a field value.
+                                          type: string
+                                        value:
+                                          description: Requests that match this value
+                                            constitute a granular traffic unit.
+                                          type: string
+                                      type: object
+                                    type: array
+                                  requestHeader:
+                                    description: Request header whose value will be
+                                      excluded from inspection during preconfigured
+                                      WAF evaluation. Structure is documented below.
+                                    items:
+                                      properties:
+                                        operator:
+                                          description: You can specify an exact match
+                                            or a partial match by using a field operator
+                                            and a field value.
+                                          type: string
+                                        value:
+                                          description: Requests that match this value
+                                            constitute a granular traffic unit.
+                                          type: string
+                                      type: object
+                                    type: array
+                                  requestQueryParam:
+                                    description: Request query parameter whose value
+                                      will be excluded from inspection during preconfigured
+                                      WAF evaluation. Note that the parameter can
+                                      be in the query string or in the POST body.
+                                      Structure is documented below.
+                                    items:
+                                      properties:
+                                        operator:
+                                          description: You can specify an exact match
+                                            or a partial match by using a field operator
+                                            and a field value.
+                                          type: string
+                                        value:
+                                          description: Requests that match this value
+                                            constitute a granular traffic unit.
+                                          type: string
+                                      type: object
+                                    type: array
+                                  requestUri:
+                                    description: Request URI from the request line
+                                      to be excluded from inspection during preconfigured
+                                      WAF evaluation. When specifying this field,
+                                      the query or fragment part should be excluded.
+                                      Structure is documented below.
+                                    items:
+                                      properties:
+                                        operator:
+                                          description: You can specify an exact match
+                                            or a partial match by using a field operator
+                                            and a field value.
+                                          type: string
+                                        value:
+                                          description: Requests that match this value
+                                            constitute a granular traffic unit.
+                                          type: string
+                                      type: object
+                                    type: array
+                                  targetRuleIds:
+                                    description: A list of target rule IDs under the
+                                      WAF rule set to apply the preconfigured WAF
+                                      exclusion. If omitted, it refers to all the
+                                      rule IDs under the WAF rule set.
+                                    items:
+                                      type: string
+                                    type: array
+                                    x-kubernetes-list-type: set
+                                  targetRuleSet:
+                                    description: Target WAF rule set to apply the
+                                      preconfigured WAF exclusion.
+                                    type: string
+                                type: object
+                              type: array
+                          type: object
                         preview:
                           description: |-
                             When set to true, the action specified above is not enforced.
@@ -1852,6 +2741,27 @@ spec:
                               description: Determines the key to enforce the rate_limit_threshold
                                 on. If not specified, defaults to ALL.
                               type: string
+                            enforceOnKeyConfigs:
+                              description: If specified, any combination of values
+                                of enforce_on_key_type/enforce_on_key_name is treated
+                                as the key on which rate limit threshold/action is
+                                enforced. You can specify up to 3 enforce_on_key_configs.
+                                If enforce_on_key_configs is specified, enforce_on_key
+                                must be set to an empty string. Structure is documented
+                                below.
+                              items:
+                                properties:
+                                  enforceOnKeyName:
+                                    description: 'Rate limit key name applicable only
+                                      for the following key types:'
+                                    type: string
+                                  enforceOnKeyType:
+                                    description: Determines the key to enforce the
+                                      rate_limit_threshold on. If not specified, defaults
+                                      to ALL.
+                                    type: string
+                                type: object
+                              type: array
                             enforceOnKeyName:
                               description: 'Rate limit key name applicable only for
                                 the following key types:'
@@ -1862,15 +2772,19 @@ spec:
                                 Valid options are deny() where valid values for status are 403, 404, 429, and 502.
                               type: string
                             exceedRedirectOptions:
-                              description: 'block supports:'
+                              description: Parameters defining the redirect action
+                                that is used as the exceed action. Cannot be specified
+                                if the exceed action is not redirect. Structure is
+                                documented below.
                               properties:
                                 target:
-                                  description: Target for the redirect action. This
-                                    is required if the type is EXTERNAL_302 and cannot
-                                    be specified for GOOGLE_RECAPTCHA.
+                                  description: External redirection target when EXTERNAL_302
+                                    is set in type.
                                   type: string
                                 type:
-                                  description: Type of the redirect action.
+                                  description: The type indicates the intended use
+                                    of the security policy. This field can be set
+                                    only at resource creation time.
                                   type: string
                               type: object
                             rateLimitThreshold:
@@ -1893,12 +2807,13 @@ spec:
                             below.
                           properties:
                             target:
-                              description: Target for the redirect action. This is
-                                required if the type is EXTERNAL_302 and cannot be
-                                specified for GOOGLE_RECAPTCHA.
+                              description: External redirection target when EXTERNAL_302
+                                is set in type.
                               type: string
                             type:
-                              description: Type of the redirect action.
+                              description: The type indicates the intended use of
+                                the security policy. This field can be set only at
+                                resource creation time.
                               type: string
                           type: object
                       type: object
@@ -1974,93 +2889,12 @@ spec:
                 required:
                 - name
                 type: object
-              publishConnectionDetailsTo:
-                description: |-
-                  PublishConnectionDetailsTo specifies the connection secret config which
-                  contains a name, metadata and a reference to secret store config to
-                  which any connection details for this managed resource should be written.
-                  Connection details frequently include the endpoint, username,
-                  and password required to connect to the managed resource.
-                properties:
-                  configRef:
-                    default:
-                      name: default
-                    description: |-
-                      SecretStoreConfigRef specifies which secret store config should be used
-                      for this ConnectionSecret.
-                    properties:
-                      name:
-                        description: Name of the referenced object.
-                        type: string
-                      policy:
-                        description: Policies for referencing.
-                        properties:
-                          resolution:
-                            default: Required
-                            description: |-
-                              Resolution specifies whether resolution of this reference is required.
-                              The default is 'Required', which means the reconcile will fail if the
-                              reference cannot be resolved. 'Optional' means this reference will be
-                              a no-op if it cannot be resolved.
-                            enum:
-                            - Required
-                            - Optional
-                            type: string
-                          resolve:
-                            description: |-
-                              Resolve specifies when this reference should be resolved. The default
-                              is 'IfNotPresent', which will attempt to resolve the reference only when
-                              the corresponding field is not present. Use 'Always' to resolve the
-                              reference on every reconcile.
-                            enum:
-                            - Always
-                            - IfNotPresent
-                            type: string
-                        type: object
-                    required:
-                    - name
-                    type: object
-                  metadata:
-                    description: Metadata is the metadata for connection secret.
-                    properties:
-                      annotations:
-                        additionalProperties:
-                          type: string
-                        description: |-
-                          Annotations are the annotations to be added to connection secret.
-                          - For Kubernetes secrets, this will be used as "metadata.annotations".
-                          - It is up to Secret Store implementation for others store types.
-                        type: object
-                      labels:
-                        additionalProperties:
-                          type: string
-                        description: |-
-                          Labels are the labels/tags to be added to connection secret.
-                          - For Kubernetes secrets, this will be used as "metadata.labels".
-                          - It is up to Secret Store implementation for others store types.
-                        type: object
-                      type:
-                        description: |-
-                          Type is the SecretType for the connection secret.
-                          - Only valid for Kubernetes Secret Stores.
-                        type: string
-                    type: object
-                  name:
-                    description: Name is the name of the connection secret.
-                    type: string
-                required:
-                - name
-                type: object
               writeConnectionSecretToRef:
                 description: |-
                   WriteConnectionSecretToReference specifies the namespace and name of a
                   Secret to which any connection details for this managed resource should
                   be written. Connection details frequently include the endpoint, username,
                   and password required to connect to the managed resource.
-                  This field is planned to be replaced in a future release in favor of
-                  PublishConnectionDetailsTo. Currently, both could be set independently
-                  and connection details would be published to both without affecting
-                  each other.
                 properties:
                   name:
                     description: Name of the secret.
@@ -2096,6 +2930,72 @@ spec:
                           ruleVisibility:
                             description: 'Rule visibility can be one of the following:'
                             type: string
+                          thresholdConfigs:
+                            description: Configuration options for layer7 adaptive
+                              protection for various customizable thresholds. Structure
+                              is documented below.
+                            items:
+                              properties:
+                                autoDeployConfidenceThreshold:
+                                  description: Confidence threshold above which Adaptive
+                                    Protection's auto-deploy takes actions.
+                                  type: number
+                                autoDeployExpirationSec:
+                                  description: Duration over which Adaptive Protection's
+                                    auto-deployed actions last.
+                                  type: number
+                                autoDeployImpactedBaselineThreshold:
+                                  description: Impacted baseline threshold below which
+                                    Adaptive Protection's auto-deploy takes actions.
+                                  type: number
+                                autoDeployLoadThreshold:
+                                  description: Load threshold above which Adaptive
+                                    Protection automatically deploy threshold based
+                                    on the backend load threshold and detect a new
+                                    rule during an alerted attack.
+                                  type: number
+                                detectionAbsoluteQps:
+                                  description: Detection threshold based on absolute
+                                    QPS.
+                                  type: number
+                                detectionLoadThreshold:
+                                  description: Detection threshold based on the backend
+                                    service's load.
+                                  type: number
+                                detectionRelativeToBaselineQps:
+                                  description: Detection threshold based on QPS relative
+                                    to the average of baseline traffic.
+                                  type: number
+                                name:
+                                  description: The name of config. The name must be
+                                    1-63 characters long, and comply with RFC1035.
+                                    The name must be unique within the security policy.
+                                  type: string
+                                trafficGranularityConfigs:
+                                  description: Configuration options for enabling
+                                    Adaptive Protection to work on the specified service
+                                    granularity. Structure is documented below.
+                                  items:
+                                    properties:
+                                      enableEachUniqueValue:
+                                        description: If enabled, traffic matching
+                                          each unique value for the specified type
+                                          constitutes a separate traffic unit. It
+                                          can only be set to true if value is empty.
+                                        type: boolean
+                                      type:
+                                        description: The type indicates the intended
+                                          use of the security policy. This field can
+                                          be set only at resource creation time.
+                                        type: string
+                                      value:
+                                        description: Requests that match this value
+                                          constitute a granular traffic unit.
+                                        type: string
+                                    type: object
+                                  type: array
+                              type: object
+                            type: array
                         type: object
                     type: object
                   advancedOptionsConfig:
@@ -2268,6 +3168,106 @@ spec:
                                 Available options:
                               type: string
                           type: object
+                        preconfiguredWafConfig:
+                          description: Preconfigured WAF configuration to be applied
+                            for the rule. If the rule does not evaluate preconfigured
+                            WAF rules, i.e., if evaluatePreconfiguredWaf() is not
+                            used, this field will have no effect. Structure is documented
+                            below.
+                          properties:
+                            exclusion:
+                              description: An exclusion to apply during preconfigured
+                                WAF evaluation. Structure is documented below.
+                              items:
+                                properties:
+                                  requestCookie:
+                                    description: Request cookie whose value will be
+                                      excluded from inspection during preconfigured
+                                      WAF evaluation. Structure is documented below.
+                                    items:
+                                      properties:
+                                        operator:
+                                          description: You can specify an exact match
+                                            or a partial match by using a field operator
+                                            and a field value.
+                                          type: string
+                                        value:
+                                          description: Requests that match this value
+                                            constitute a granular traffic unit.
+                                          type: string
+                                      type: object
+                                    type: array
+                                  requestHeader:
+                                    description: Request header whose value will be
+                                      excluded from inspection during preconfigured
+                                      WAF evaluation. Structure is documented below.
+                                    items:
+                                      properties:
+                                        operator:
+                                          description: You can specify an exact match
+                                            or a partial match by using a field operator
+                                            and a field value.
+                                          type: string
+                                        value:
+                                          description: Requests that match this value
+                                            constitute a granular traffic unit.
+                                          type: string
+                                      type: object
+                                    type: array
+                                  requestQueryParam:
+                                    description: Request query parameter whose value
+                                      will be excluded from inspection during preconfigured
+                                      WAF evaluation. Note that the parameter can
+                                      be in the query string or in the POST body.
+                                      Structure is documented below.
+                                    items:
+                                      properties:
+                                        operator:
+                                          description: You can specify an exact match
+                                            or a partial match by using a field operator
+                                            and a field value.
+                                          type: string
+                                        value:
+                                          description: Requests that match this value
+                                            constitute a granular traffic unit.
+                                          type: string
+                                      type: object
+                                    type: array
+                                  requestUri:
+                                    description: Request URI from the request line
+                                      to be excluded from inspection during preconfigured
+                                      WAF evaluation. When specifying this field,
+                                      the query or fragment part should be excluded.
+                                      Structure is documented below.
+                                    items:
+                                      properties:
+                                        operator:
+                                          description: You can specify an exact match
+                                            or a partial match by using a field operator
+                                            and a field value.
+                                          type: string
+                                        value:
+                                          description: Requests that match this value
+                                            constitute a granular traffic unit.
+                                          type: string
+                                      type: object
+                                    type: array
+                                  targetRuleIds:
+                                    description: A list of target rule IDs under the
+                                      WAF rule set to apply the preconfigured WAF
+                                      exclusion. If omitted, it refers to all the
+                                      rule IDs under the WAF rule set.
+                                    items:
+                                      type: string
+                                    type: array
+                                    x-kubernetes-list-type: set
+                                  targetRuleSet:
+                                    description: Target WAF rule set to apply the
+                                      preconfigured WAF exclusion.
+                                    type: string
+                                type: object
+                              type: array
+                          type: object
                         preview:
                           description: |-
                             When set to true, the action specified above is not enforced.
@@ -2312,6 +3312,27 @@ spec:
                               description: Determines the key to enforce the rate_limit_threshold
                                 on. If not specified, defaults to ALL.
                               type: string
+                            enforceOnKeyConfigs:
+                              description: If specified, any combination of values
+                                of enforce_on_key_type/enforce_on_key_name is treated
+                                as the key on which rate limit threshold/action is
+                                enforced. You can specify up to 3 enforce_on_key_configs.
+                                If enforce_on_key_configs is specified, enforce_on_key
+                                must be set to an empty string. Structure is documented
+                                below.
+                              items:
+                                properties:
+                                  enforceOnKeyName:
+                                    description: 'Rate limit key name applicable only
+                                      for the following key types:'
+                                    type: string
+                                  enforceOnKeyType:
+                                    description: Determines the key to enforce the
+                                      rate_limit_threshold on. If not specified, defaults
+                                      to ALL.
+                                    type: string
+                                type: object
+                              type: array
                             enforceOnKeyName:
                               description: 'Rate limit key name applicable only for
                                 the following key types:'
@@ -2322,15 +3343,19 @@ spec:
                                 Valid options are deny() where valid values for status are 403, 404, 429, and 502.
                               type: string
                             exceedRedirectOptions:
-                              description: 'block supports:'
+                              description: Parameters defining the redirect action
+                                that is used as the exceed action. Cannot be specified
+                                if the exceed action is not redirect. Structure is
+                                documented below.
                               properties:
                                 target:
-                                  description: Target for the redirect action. This
-                                    is required if the type is EXTERNAL_302 and cannot
-                                    be specified for GOOGLE_RECAPTCHA.
+                                  description: External redirection target when EXTERNAL_302
+                                    is set in type.
                                   type: string
                                 type:
-                                  description: Type of the redirect action.
+                                  description: The type indicates the intended use
+                                    of the security policy. This field can be set
+                                    only at resource creation time.
                                   type: string
                               type: object
                             rateLimitThreshold:
@@ -2353,12 +3378,13 @@ spec:
                             below.
                           properties:
                             target:
-                              description: Target for the redirect action. This is
-                                required if the type is EXTERNAL_302 and cannot be
-                                specified for GOOGLE_RECAPTCHA.
+                              description: External redirection target when EXTERNAL_302
+                                is set in type.
                               type: string
                             type:
-                              description: Type of the redirect action.
+                              description: The type indicates the intended use of
+                                the security policy. This field can be set only at
+                                resource creation time.
                               type: string
                           type: object
                       type: object

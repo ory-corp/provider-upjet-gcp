@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.18.0
   name: reservations.bigquery.gcp.upbound.io
 spec:
   group: bigquery.gcp.upbound.io
@@ -106,15 +106,17 @@ spec:
                       The geographic location where the transfer config should reside.
                       Examples: US, EU, asia-northeast1. The default value is US.
                     type: string
-                  multiRegionAuxiliary:
-                    description: |-
-                      Applicable only for reservations located within one of the BigQuery multi-regions (US or EU).
-                      If set to true, this reservation is placed in the organization's secondary region which is designated for disaster recovery purposes. If false, this reservation is placed in the organization's default region.
-                    type: boolean
                   project:
                     description: |-
                       The ID of the project in which the resource belongs.
                       If it is not provided, the provider project is used.
+                    type: string
+                  secondaryLocation:
+                    description: |-
+                      The current location of the reservation's secondary replica. This field is only set for
+                      reservations using the managed disaster recovery feature. Users can set this in create
+                      reservation calls to create a failover reservation or in update reservation calls to convert
+                      a non-failover reservation to a failover reservation(or vice versa).
                     type: string
                   slotCapacity:
                     description: |-
@@ -163,11 +165,13 @@ spec:
                       the same admin project. If true, a query using this reservation will execute with the slot
                       capacity specified above at most.
                     type: boolean
-                  multiRegionAuxiliary:
+                  secondaryLocation:
                     description: |-
-                      Applicable only for reservations located within one of the BigQuery multi-regions (US or EU).
-                      If set to true, this reservation is placed in the organization's secondary region which is designated for disaster recovery purposes. If false, this reservation is placed in the organization's default region.
-                    type: boolean
+                      The current location of the reservation's secondary replica. This field is only set for
+                      reservations using the managed disaster recovery feature. Users can set this in create
+                      reservation calls to create a failover reservation or in update reservation calls to convert
+                      a non-failover reservation to a failover reservation(or vice versa).
+                    type: string
                   slotCapacity:
                     description: |-
                       Minimum slots available to this reservation. A slot is a unit of computational power in BigQuery, and serves as the
@@ -240,93 +244,12 @@ spec:
                 required:
                 - name
                 type: object
-              publishConnectionDetailsTo:
-                description: |-
-                  PublishConnectionDetailsTo specifies the connection secret config which
-                  contains a name, metadata and a reference to secret store config to
-                  which any connection details for this managed resource should be written.
-                  Connection details frequently include the endpoint, username,
-                  and password required to connect to the managed resource.
-                properties:
-                  configRef:
-                    default:
-                      name: default
-                    description: |-
-                      SecretStoreConfigRef specifies which secret store config should be used
-                      for this ConnectionSecret.
-                    properties:
-                      name:
-                        description: Name of the referenced object.
-                        type: string
-                      policy:
-                        description: Policies for referencing.
-                        properties:
-                          resolution:
-                            default: Required
-                            description: |-
-                              Resolution specifies whether resolution of this reference is required.
-                              The default is 'Required', which means the reconcile will fail if the
-                              reference cannot be resolved. 'Optional' means this reference will be
-                              a no-op if it cannot be resolved.
-                            enum:
-                            - Required
-                            - Optional
-                            type: string
-                          resolve:
-                            description: |-
-                              Resolve specifies when this reference should be resolved. The default
-                              is 'IfNotPresent', which will attempt to resolve the reference only when
-                              the corresponding field is not present. Use 'Always' to resolve the
-                              reference on every reconcile.
-                            enum:
-                            - Always
-                            - IfNotPresent
-                            type: string
-                        type: object
-                    required:
-                    - name
-                    type: object
-                  metadata:
-                    description: Metadata is the metadata for connection secret.
-                    properties:
-                      annotations:
-                        additionalProperties:
-                          type: string
-                        description: |-
-                          Annotations are the annotations to be added to connection secret.
-                          - For Kubernetes secrets, this will be used as "metadata.annotations".
-                          - It is up to Secret Store implementation for others store types.
-                        type: object
-                      labels:
-                        additionalProperties:
-                          type: string
-                        description: |-
-                          Labels are the labels/tags to be added to connection secret.
-                          - For Kubernetes secrets, this will be used as "metadata.labels".
-                          - It is up to Secret Store implementation for others store types.
-                        type: object
-                      type:
-                        description: |-
-                          Type is the SecretType for the connection secret.
-                          - Only valid for Kubernetes Secret Stores.
-                        type: string
-                    type: object
-                  name:
-                    description: Name is the name of the connection secret.
-                    type: string
-                required:
-                - name
-                type: object
               writeConnectionSecretToRef:
                 description: |-
                   WriteConnectionSecretToReference specifies the namespace and name of a
                   Secret to which any connection details for this managed resource should
                   be written. Connection details frequently include the endpoint, username,
                   and password required to connect to the managed resource.
-                  This field is planned to be replaced in a future release in favor of
-                  PublishConnectionDetailsTo. Currently, both could be set independently
-                  and connection details would be published to both without affecting
-                  each other.
                 properties:
                   name:
                     description: Name of the secret.
@@ -392,15 +315,74 @@ spec:
                       The geographic location where the transfer config should reside.
                       Examples: US, EU, asia-northeast1. The default value is US.
                     type: string
-                  multiRegionAuxiliary:
+                  originalPrimaryLocation:
                     description: |-
-                      Applicable only for reservations located within one of the BigQuery multi-regions (US or EU).
-                      If set to true, this reservation is placed in the organization's secondary region which is designated for disaster recovery purposes. If false, this reservation is placed in the organization's default region.
-                    type: boolean
+                      The location where the reservation was originally created. This is set only during the
+                      failover reservation's creation. All billing charges for the failover reservation will be
+                      applied to this location.
+                    type: string
+                  primaryLocation:
+                    description: |-
+                      The current location of the reservation's primary replica. This field is only set for
+                      reservations using the managed disaster recovery feature.
+                    type: string
                   project:
                     description: |-
                       The ID of the project in which the resource belongs.
                       If it is not provided, the provider project is used.
+                    type: string
+                  replicationStatus:
+                    description: |-
+                      The Disaster Recovery(DR) replication status of the reservation. This is only available for
+                      the primary replicas of DR/failover reservations and provides information about the both the
+                      staleness of the secondary and the last error encountered while trying to replicate changes
+                      from the primary to the secondary. If this field is blank, it means that the reservation is
+                      either not a DR reservation or the reservation is a DR secondary or that any replication
+                      operations on the reservation have succeeded.
+                      Structure is documented below.
+                    items:
+                      properties:
+                        error:
+                          description: |-
+                            (Output)
+                            The last error encountered while trying to replicate changes from the primary to the
+                            secondary. This field is only available if the replication has not succeeded since.
+                            Structure is documented below.
+                          items:
+                            properties:
+                              code:
+                                description: |-
+                                  (Output)
+                                  The status code, which should be an enum value of google.rpc.Code.
+                                type: number
+                              message:
+                                description: |-
+                                  (Output)
+                                  A developer-facing error message, which should be in English.
+                                type: string
+                            type: object
+                          type: array
+                        lastErrorTime:
+                          description: |-
+                            (Output)
+                            The time at which the last error was encountered while trying to replicate changes from
+                            the primary to the secondary. This field is only available if the replication has not
+                            succeeded since.
+                          type: string
+                        lastReplicationTime:
+                          description: |-
+                            (Output)
+                            A timestamp corresponding to the last change on the primary that was successfully
+                            replicated to the secondary.
+                          type: string
+                      type: object
+                    type: array
+                  secondaryLocation:
+                    description: |-
+                      The current location of the reservation's secondary replica. This field is only set for
+                      reservations using the managed disaster recovery feature. Users can set this in create
+                      reservation calls to create a failover reservation or in update reservation calls to convert
+                      a non-failover reservation to a failover reservation(or vice versa).
                     type: string
                   slotCapacity:
                     description: |-
@@ -555,15 +537,17 @@ spec:
                       The geographic location where the transfer config should reside.
                       Examples: US, EU, asia-northeast1. The default value is US.
                     type: string
-                  multiRegionAuxiliary:
-                    description: |-
-                      Applicable only for reservations located within one of the BigQuery multi-regions (US or EU).
-                      If set to true, this reservation is placed in the organization's secondary region which is designated for disaster recovery purposes. If false, this reservation is placed in the organization's default region.
-                    type: boolean
                   project:
                     description: |-
                       The ID of the project in which the resource belongs.
                       If it is not provided, the provider project is used.
+                    type: string
+                  secondaryLocation:
+                    description: |-
+                      The current location of the reservation's secondary replica. This field is only set for
+                      reservations using the managed disaster recovery feature. Users can set this in create
+                      reservation calls to create a failover reservation or in update reservation calls to convert
+                      a non-failover reservation to a failover reservation(or vice versa).
                     type: string
                   slotCapacity:
                     description: |-
@@ -610,11 +594,13 @@ spec:
                       the same admin project. If true, a query using this reservation will execute with the slot
                       capacity specified above at most.
                     type: boolean
-                  multiRegionAuxiliary:
+                  secondaryLocation:
                     description: |-
-                      Applicable only for reservations located within one of the BigQuery multi-regions (US or EU).
-                      If set to true, this reservation is placed in the organization's secondary region which is designated for disaster recovery purposes. If false, this reservation is placed in the organization's default region.
-                    type: boolean
+                      The current location of the reservation's secondary replica. This field is only set for
+                      reservations using the managed disaster recovery feature. Users can set this in create
+                      reservation calls to create a failover reservation or in update reservation calls to convert
+                      a non-failover reservation to a failover reservation(or vice versa).
+                    type: string
                   slotCapacity:
                     description: |-
                       Minimum slots available to this reservation. A slot is a unit of computational power in BigQuery, and serves as the
@@ -687,93 +673,12 @@ spec:
                 required:
                 - name
                 type: object
-              publishConnectionDetailsTo:
-                description: |-
-                  PublishConnectionDetailsTo specifies the connection secret config which
-                  contains a name, metadata and a reference to secret store config to
-                  which any connection details for this managed resource should be written.
-                  Connection details frequently include the endpoint, username,
-                  and password required to connect to the managed resource.
-                properties:
-                  configRef:
-                    default:
-                      name: default
-                    description: |-
-                      SecretStoreConfigRef specifies which secret store config should be used
-                      for this ConnectionSecret.
-                    properties:
-                      name:
-                        description: Name of the referenced object.
-                        type: string
-                      policy:
-                        description: Policies for referencing.
-                        properties:
-                          resolution:
-                            default: Required
-                            description: |-
-                              Resolution specifies whether resolution of this reference is required.
-                              The default is 'Required', which means the reconcile will fail if the
-                              reference cannot be resolved. 'Optional' means this reference will be
-                              a no-op if it cannot be resolved.
-                            enum:
-                            - Required
-                            - Optional
-                            type: string
-                          resolve:
-                            description: |-
-                              Resolve specifies when this reference should be resolved. The default
-                              is 'IfNotPresent', which will attempt to resolve the reference only when
-                              the corresponding field is not present. Use 'Always' to resolve the
-                              reference on every reconcile.
-                            enum:
-                            - Always
-                            - IfNotPresent
-                            type: string
-                        type: object
-                    required:
-                    - name
-                    type: object
-                  metadata:
-                    description: Metadata is the metadata for connection secret.
-                    properties:
-                      annotations:
-                        additionalProperties:
-                          type: string
-                        description: |-
-                          Annotations are the annotations to be added to connection secret.
-                          - For Kubernetes secrets, this will be used as "metadata.annotations".
-                          - It is up to Secret Store implementation for others store types.
-                        type: object
-                      labels:
-                        additionalProperties:
-                          type: string
-                        description: |-
-                          Labels are the labels/tags to be added to connection secret.
-                          - For Kubernetes secrets, this will be used as "metadata.labels".
-                          - It is up to Secret Store implementation for others store types.
-                        type: object
-                      type:
-                        description: |-
-                          Type is the SecretType for the connection secret.
-                          - Only valid for Kubernetes Secret Stores.
-                        type: string
-                    type: object
-                  name:
-                    description: Name is the name of the connection secret.
-                    type: string
-                required:
-                - name
-                type: object
               writeConnectionSecretToRef:
                 description: |-
                   WriteConnectionSecretToReference specifies the namespace and name of a
                   Secret to which any connection details for this managed resource should
                   be written. Connection details frequently include the endpoint, username,
                   and password required to connect to the managed resource.
-                  This field is planned to be replaced in a future release in favor of
-                  PublishConnectionDetailsTo. Currently, both could be set independently
-                  and connection details would be published to both without affecting
-                  each other.
                 properties:
                   name:
                     description: Name of the secret.
@@ -837,15 +742,74 @@ spec:
                       The geographic location where the transfer config should reside.
                       Examples: US, EU, asia-northeast1. The default value is US.
                     type: string
-                  multiRegionAuxiliary:
+                  originalPrimaryLocation:
                     description: |-
-                      Applicable only for reservations located within one of the BigQuery multi-regions (US or EU).
-                      If set to true, this reservation is placed in the organization's secondary region which is designated for disaster recovery purposes. If false, this reservation is placed in the organization's default region.
-                    type: boolean
+                      The location where the reservation was originally created. This is set only during the
+                      failover reservation's creation. All billing charges for the failover reservation will be
+                      applied to this location.
+                    type: string
+                  primaryLocation:
+                    description: |-
+                      The current location of the reservation's primary replica. This field is only set for
+                      reservations using the managed disaster recovery feature.
+                    type: string
                   project:
                     description: |-
                       The ID of the project in which the resource belongs.
                       If it is not provided, the provider project is used.
+                    type: string
+                  replicationStatus:
+                    description: |-
+                      The Disaster Recovery(DR) replication status of the reservation. This is only available for
+                      the primary replicas of DR/failover reservations and provides information about the both the
+                      staleness of the secondary and the last error encountered while trying to replicate changes
+                      from the primary to the secondary. If this field is blank, it means that the reservation is
+                      either not a DR reservation or the reservation is a DR secondary or that any replication
+                      operations on the reservation have succeeded.
+                      Structure is documented below.
+                    items:
+                      properties:
+                        error:
+                          description: |-
+                            (Output)
+                            The last error encountered while trying to replicate changes from the primary to the
+                            secondary. This field is only available if the replication has not succeeded since.
+                            Structure is documented below.
+                          items:
+                            properties:
+                              code:
+                                description: |-
+                                  (Output)
+                                  The status code, which should be an enum value of google.rpc.Code.
+                                type: number
+                              message:
+                                description: |-
+                                  (Output)
+                                  A developer-facing error message, which should be in English.
+                                type: string
+                            type: object
+                          type: array
+                        lastErrorTime:
+                          description: |-
+                            (Output)
+                            The time at which the last error was encountered while trying to replicate changes from
+                            the primary to the secondary. This field is only available if the replication has not
+                            succeeded since.
+                          type: string
+                        lastReplicationTime:
+                          description: |-
+                            (Output)
+                            A timestamp corresponding to the last change on the primary that was successfully
+                            replicated to the secondary.
+                          type: string
+                      type: object
+                    type: array
+                  secondaryLocation:
+                    description: |-
+                      The current location of the reservation's secondary replica. This field is only set for
+                      reservations using the managed disaster recovery feature. Users can set this in create
+                      reservation calls to create a failover reservation or in update reservation calls to convert
+                      a non-failover reservation to a failover reservation(or vice versa).
                     type: string
                   slotCapacity:
                     description: |-

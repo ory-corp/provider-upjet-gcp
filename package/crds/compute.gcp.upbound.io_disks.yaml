@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.18.0
   name: disks.compute.gcp.upbound.io
 spec:
   group: compute.gcp.upbound.io
@@ -76,12 +76,16 @@ spec:
                 properties:
                   accessMode:
                     description: |-
-                      The accessMode of the disk.
+                      The access mode of the disk.
                       For example:
+                    type: string
+                  architecture:
+                    description: The architecture of the disk. Values include X86_64,
+                      ARM64.
                     type: string
                   asyncPrimaryDisk:
                     description: |-
-                      A nested object resource
+                      A nested object resource.
                       Structure is documented below.
                     items:
                       properties:
@@ -166,6 +170,16 @@ spec:
                           type: object
                       type: object
                     type: array
+                  createSnapshotBeforeDestroy:
+                    description: |-
+                      If set to true, a snapshot of the disk will be created before it is destroyed.
+                      If your disk is encrypted with customer managed encryption keys these will be reused for the snapshot creation.
+                      The name of the snapshot by default will be {{disk-name}}-YYYYMMDD-HHmm
+                    type: boolean
+                  createSnapshotBeforeDestroyPrefix:
+                    description: This will set a custom name prefix for the snapshot
+                      that's created when the disk is deleted.
+                    type: string
                   description:
                     description: |-
                       An optional description of this resource. Provide this property when
@@ -284,6 +298,23 @@ spec:
                     items:
                       type: string
                     type: array
+                  params:
+                    description: |-
+                      Additional params passed with the request, but not persisted as part of resource payload
+                      Structure is documented below.
+                    items:
+                      properties:
+                        resourceManagerTags:
+                          additionalProperties:
+                            type: string
+                          description: |-
+                            Resource manager tags to be bound to the disk. Tag keys and values have the
+                            same definition as resource manager tags. Keys must be in the format tagKeys/{tag_key_id},
+                            and values are in the format tagValues/456.
+                          type: object
+                          x-kubernetes-map-type: granular
+                      type: object
+                    type: array
                   physicalBlockSizeBytes:
                     description: |-
                       Physical block size of the persistent disk, in bytes. If not present
@@ -360,6 +391,11 @@ spec:
                           type: string
                       type: object
                     type: array
+                  sourceInstantSnapshot:
+                    description: |-
+                      The source instant snapshot used to create this disk. You can provide this as a partial or full URL to the resource.
+                      For example, the following are valid values:
+                    type: string
                   sourceSnapshotEncryptionKey:
                     description: |-
                       The customer-supplied encryption key of the source snapshot. Required
@@ -388,9 +424,17 @@ spec:
                           type: string
                       type: object
                     type: array
+                  sourceStorageObject:
+                    description: |-
+                      The full Google Cloud Storage URI where the disk image is stored.
+                      This file must be a gzip-compressed tarball whose name ends in .tar.gz or virtual machine disk whose name ends in vmdk.
+                      Valid URIs may start with gs:// or https://storage.googleapis.com/.
+                      This flag is not optimized for creating multiple disks from a source storage object.
+                      To create many disks from a source storage object, use gcloud compute images import instead.
+                    type: string
                   storagePool:
                     description: |-
-                      The URL of the storage pool in which the new disk is created.
+                      The URL or the name of the storage pool in which the new disk is created.
                       For example:
                     type: string
                   type:
@@ -419,12 +463,16 @@ spec:
                 properties:
                   accessMode:
                     description: |-
-                      The accessMode of the disk.
+                      The access mode of the disk.
                       For example:
+                    type: string
+                  architecture:
+                    description: The architecture of the disk. Values include X86_64,
+                      ARM64.
                     type: string
                   asyncPrimaryDisk:
                     description: |-
-                      A nested object resource
+                      A nested object resource.
                       Structure is documented below.
                     items:
                       properties:
@@ -509,6 +557,16 @@ spec:
                           type: object
                       type: object
                     type: array
+                  createSnapshotBeforeDestroy:
+                    description: |-
+                      If set to true, a snapshot of the disk will be created before it is destroyed.
+                      If your disk is encrypted with customer managed encryption keys these will be reused for the snapshot creation.
+                      The name of the snapshot by default will be {{disk-name}}-YYYYMMDD-HHmm
+                    type: boolean
+                  createSnapshotBeforeDestroyPrefix:
+                    description: This will set a custom name prefix for the snapshot
+                      that's created when the disk is deleted.
+                    type: string
                   description:
                     description: |-
                       An optional description of this resource. Provide this property when
@@ -627,6 +685,23 @@ spec:
                     items:
                       type: string
                     type: array
+                  params:
+                    description: |-
+                      Additional params passed with the request, but not persisted as part of resource payload
+                      Structure is documented below.
+                    items:
+                      properties:
+                        resourceManagerTags:
+                          additionalProperties:
+                            type: string
+                          description: |-
+                            Resource manager tags to be bound to the disk. Tag keys and values have the
+                            same definition as resource manager tags. Keys must be in the format tagKeys/{tag_key_id},
+                            and values are in the format tagValues/456.
+                          type: object
+                          x-kubernetes-map-type: granular
+                      type: object
+                    type: array
                   physicalBlockSizeBytes:
                     description: |-
                       Physical block size of the persistent disk, in bytes. If not present
@@ -703,6 +778,11 @@ spec:
                           type: string
                       type: object
                     type: array
+                  sourceInstantSnapshot:
+                    description: |-
+                      The source instant snapshot used to create this disk. You can provide this as a partial or full URL to the resource.
+                      For example, the following are valid values:
+                    type: string
                   sourceSnapshotEncryptionKey:
                     description: |-
                       The customer-supplied encryption key of the source snapshot. Required
@@ -731,9 +811,17 @@ spec:
                           type: string
                       type: object
                     type: array
+                  sourceStorageObject:
+                    description: |-
+                      The full Google Cloud Storage URI where the disk image is stored.
+                      This file must be a gzip-compressed tarball whose name ends in .tar.gz or virtual machine disk whose name ends in vmdk.
+                      Valid URIs may start with gs:// or https://storage.googleapis.com/.
+                      This flag is not optimized for creating multiple disks from a source storage object.
+                      To create many disks from a source storage object, use gcloud compute images import instead.
+                    type: string
                   storagePool:
                     description: |-
-                      The URL of the storage pool in which the new disk is created.
+                      The URL or the name of the storage pool in which the new disk is created.
                       For example:
                     type: string
                   type:
@@ -808,93 +896,12 @@ spec:
                 required:
                 - name
                 type: object
-              publishConnectionDetailsTo:
-                description: |-
-                  PublishConnectionDetailsTo specifies the connection secret config which
-                  contains a name, metadata and a reference to secret store config to
-                  which any connection details for this managed resource should be written.
-                  Connection details frequently include the endpoint, username,
-                  and password required to connect to the managed resource.
-                properties:
-                  configRef:
-                    default:
-                      name: default
-                    description: |-
-                      SecretStoreConfigRef specifies which secret store config should be used
-                      for this ConnectionSecret.
-                    properties:
-                      name:
-                        description: Name of the referenced object.
-                        type: string
-                      policy:
-                        description: Policies for referencing.
-                        properties:
-                          resolution:
-                            default: Required
-                            description: |-
-                              Resolution specifies whether resolution of this reference is required.
-                              The default is 'Required', which means the reconcile will fail if the
-                              reference cannot be resolved. 'Optional' means this reference will be
-                              a no-op if it cannot be resolved.
-                            enum:
-                            - Required
-                            - Optional
-                            type: string
-                          resolve:
-                            description: |-
-                              Resolve specifies when this reference should be resolved. The default
-                              is 'IfNotPresent', which will attempt to resolve the reference only when
-                              the corresponding field is not present. Use 'Always' to resolve the
-                              reference on every reconcile.
-                            enum:
-                            - Always
-                            - IfNotPresent
-                            type: string
-                        type: object
-                    required:
-                    - name
-                    type: object
-                  metadata:
-                    description: Metadata is the metadata for connection secret.
-                    properties:
-                      annotations:
-                        additionalProperties:
-                          type: string
-                        description: |-
-                          Annotations are the annotations to be added to connection secret.
-                          - For Kubernetes secrets, this will be used as "metadata.annotations".
-                          - It is up to Secret Store implementation for others store types.
-                        type: object
-                      labels:
-                        additionalProperties:
-                          type: string
-                        description: |-
-                          Labels are the labels/tags to be added to connection secret.
-                          - For Kubernetes secrets, this will be used as "metadata.labels".
-                          - It is up to Secret Store implementation for others store types.
-                        type: object
-                      type:
-                        description: |-
-                          Type is the SecretType for the connection secret.
-                          - Only valid for Kubernetes Secret Stores.
-                        type: string
-                    type: object
-                  name:
-                    description: Name is the name of the connection secret.
-                    type: string
-                required:
-                - name
-                type: object
               writeConnectionSecretToRef:
                 description: |-
                   WriteConnectionSecretToReference specifies the namespace and name of a
                   Secret to which any connection details for this managed resource should
                   be written. Connection details frequently include the endpoint, username,
                   and password required to connect to the managed resource.
-                  This field is planned to be replaced in a future release in favor of
-                  PublishConnectionDetailsTo. Currently, both could be set independently
-                  and connection details would be published to both without affecting
-                  each other.
                 properties:
                   name:
                     description: Name of the secret.
@@ -916,12 +923,16 @@ spec:
                 properties:
                   accessMode:
                     description: |-
-                      The accessMode of the disk.
+                      The access mode of the disk.
                       For example:
+                    type: string
+                  architecture:
+                    description: The architecture of the disk. Values include X86_64,
+                      ARM64.
                     type: string
                   asyncPrimaryDisk:
                     description: |-
-                      A nested object resource
+                      A nested object resource.
                       Structure is documented below.
                     items:
                       properties:
@@ -930,6 +941,16 @@ spec:
                           type: string
                       type: object
                     type: array
+                  createSnapshotBeforeDestroy:
+                    description: |-
+                      If set to true, a snapshot of the disk will be created before it is destroyed.
+                      If your disk is encrypted with customer managed encryption keys these will be reused for the snapshot creation.
+                      The name of the snapshot by default will be {{disk-name}}-YYYYMMDD-HHmm
+                    type: boolean
+                  createSnapshotBeforeDestroyPrefix:
+                    description: This will set a custom name prefix for the snapshot
+                      that's created when the disk is deleted.
+                    type: string
                   creationTimestamp:
                     description: Creation timestamp in RFC3339 text format.
                     type: string
@@ -1040,6 +1061,23 @@ spec:
                     items:
                       type: string
                     type: array
+                  params:
+                    description: |-
+                      Additional params passed with the request, but not persisted as part of resource payload
+                      Structure is documented below.
+                    items:
+                      properties:
+                        resourceManagerTags:
+                          additionalProperties:
+                            type: string
+                          description: |-
+                            Resource manager tags to be bound to the disk. Tag keys and values have the
+                            same definition as resource manager tags. Keys must be in the format tagKeys/{tag_key_id},
+                            and values are in the format tagValues/456.
+                          type: object
+                          x-kubernetes-map-type: granular
+                      type: object
+                    type: array
                   physicalBlockSizeBytes:
                     description: |-
                       Physical block size of the persistent disk, in bytes. If not present
@@ -1139,6 +1177,19 @@ spec:
                       that was later deleted and recreated under the same name, the source
                       image ID would identify the exact version of the image that was used.
                     type: string
+                  sourceInstantSnapshot:
+                    description: |-
+                      The source instant snapshot used to create this disk. You can provide this as a partial or full URL to the resource.
+                      For example, the following are valid values:
+                    type: string
+                  sourceInstantSnapshotId:
+                    description: |-
+                      The unique ID of the instant snapshot used to create this disk. This value identifies
+                      the exact instant snapshot that was used to create this persistent disk.
+                      For example, if you created the persistent disk from an instant snapshot that was later
+                      deleted and recreated under the same name, the source instant snapshot ID would identify
+                      the exact version of the instant snapshot that was used.
+                    type: string
                   sourceSnapshotEncryptionKey:
                     description: |-
                       The customer-supplied encryption key of the source snapshot. Required
@@ -1182,9 +1233,17 @@ spec:
                       snapshot ID would identify the exact version of the snapshot that was
                       used.
                     type: string
+                  sourceStorageObject:
+                    description: |-
+                      The full Google Cloud Storage URI where the disk image is stored.
+                      This file must be a gzip-compressed tarball whose name ends in .tar.gz or virtual machine disk whose name ends in vmdk.
+                      Valid URIs may start with gs:// or https://storage.googleapis.com/.
+                      This flag is not optimized for creating multiple disks from a source storage object.
+                      To create many disks from a source storage object, use gcloud compute images import instead.
+                    type: string
                   storagePool:
                     description: |-
-                      The URL of the storage pool in which the new disk is created.
+                      The URL or the name of the storage pool in which the new disk is created.
                       For example:
                     type: string
                   terraformLabels:
@@ -1330,12 +1389,16 @@ spec:
                 properties:
                   accessMode:
                     description: |-
-                      The accessMode of the disk.
+                      The access mode of the disk.
                       For example:
+                    type: string
+                  architecture:
+                    description: The architecture of the disk. Values include X86_64,
+                      ARM64.
                     type: string
                   asyncPrimaryDisk:
                     description: |-
-                      A nested object resource
+                      A nested object resource.
                       Structure is documented below.
                     properties:
                       disk:
@@ -1416,6 +1479,16 @@ spec:
                             type: object
                         type: object
                     type: object
+                  createSnapshotBeforeDestroy:
+                    description: |-
+                      If set to true, a snapshot of the disk will be created before it is destroyed.
+                      If your disk is encrypted with customer managed encryption keys these will be reused for the snapshot creation.
+                      The name of the snapshot by default will be {{disk-name}}-YYYYMMDD-HHmm
+                    type: boolean
+                  createSnapshotBeforeDestroyPrefix:
+                    description: This will set a custom name prefix for the snapshot
+                      that's created when the disk is deleted.
+                    type: string
                   description:
                     description: |-
                       An optional description of this resource. Provide this property when
@@ -1532,6 +1605,21 @@ spec:
                     items:
                       type: string
                     type: array
+                  params:
+                    description: |-
+                      Additional params passed with the request, but not persisted as part of resource payload
+                      Structure is documented below.
+                    properties:
+                      resourceManagerTags:
+                        additionalProperties:
+                          type: string
+                        description: |-
+                          Resource manager tags to be bound to the disk. Tag keys and values have the
+                          same definition as resource manager tags. Keys must be in the format tagKeys/{tag_key_id},
+                          and values are in the format tagValues/456.
+                        type: object
+                        x-kubernetes-map-type: granular
+                    type: object
                   physicalBlockSizeBytes:
                     description: |-
                       Physical block size of the persistent disk, in bytes. If not present
@@ -1606,6 +1694,11 @@ spec:
                           RFC 4648 base64 to either encrypt or decrypt this resource.
                         type: string
                     type: object
+                  sourceInstantSnapshot:
+                    description: |-
+                      The source instant snapshot used to create this disk. You can provide this as a partial or full URL to the resource.
+                      For example, the following are valid values:
+                    type: string
                   sourceSnapshotEncryptionKey:
                     description: |-
                       The customer-supplied encryption key of the source snapshot. Required
@@ -1632,9 +1725,17 @@ spec:
                           RFC 4648 base64 to either encrypt or decrypt this resource.
                         type: string
                     type: object
+                  sourceStorageObject:
+                    description: |-
+                      The full Google Cloud Storage URI where the disk image is stored.
+                      This file must be a gzip-compressed tarball whose name ends in .tar.gz or virtual machine disk whose name ends in vmdk.
+                      Valid URIs may start with gs:// or https://storage.googleapis.com/.
+                      This flag is not optimized for creating multiple disks from a source storage object.
+                      To create many disks from a source storage object, use gcloud compute images import instead.
+                    type: string
                   storagePool:
                     description: |-
-                      The URL of the storage pool in which the new disk is created.
+                      The URL or the name of the storage pool in which the new disk is created.
                       For example:
                     type: string
                   type:
@@ -1663,12 +1764,16 @@ spec:
                 properties:
                   accessMode:
                     description: |-
-                      The accessMode of the disk.
+                      The access mode of the disk.
                       For example:
+                    type: string
+                  architecture:
+                    description: The architecture of the disk. Values include X86_64,
+                      ARM64.
                     type: string
                   asyncPrimaryDisk:
                     description: |-
-                      A nested object resource
+                      A nested object resource.
                       Structure is documented below.
                     properties:
                       disk:
@@ -1749,6 +1854,16 @@ spec:
                             type: object
                         type: object
                     type: object
+                  createSnapshotBeforeDestroy:
+                    description: |-
+                      If set to true, a snapshot of the disk will be created before it is destroyed.
+                      If your disk is encrypted with customer managed encryption keys these will be reused for the snapshot creation.
+                      The name of the snapshot by default will be {{disk-name}}-YYYYMMDD-HHmm
+                    type: boolean
+                  createSnapshotBeforeDestroyPrefix:
+                    description: This will set a custom name prefix for the snapshot
+                      that's created when the disk is deleted.
+                    type: string
                   description:
                     description: |-
                       An optional description of this resource. Provide this property when
@@ -1865,6 +1980,21 @@ spec:
                     items:
                       type: string
                     type: array
+                  params:
+                    description: |-
+                      Additional params passed with the request, but not persisted as part of resource payload
+                      Structure is documented below.
+                    properties:
+                      resourceManagerTags:
+                        additionalProperties:
+                          type: string
+                        description: |-
+                          Resource manager tags to be bound to the disk. Tag keys and values have the
+                          same definition as resource manager tags. Keys must be in the format tagKeys/{tag_key_id},
+                          and values are in the format tagValues/456.
+                        type: object
+                        x-kubernetes-map-type: granular
+                    type: object
                   physicalBlockSizeBytes:
                     description: |-
                       Physical block size of the persistent disk, in bytes. If not present
@@ -1939,6 +2069,11 @@ spec:
                           RFC 4648 base64 to either encrypt or decrypt this resource.
                         type: string
                     type: object
+                  sourceInstantSnapshot:
+                    description: |-
+                      The source instant snapshot used to create this disk. You can provide this as a partial or full URL to the resource.
+                      For example, the following are valid values:
+                    type: string
                   sourceSnapshotEncryptionKey:
                     description: |-
                       The customer-supplied encryption key of the source snapshot. Required
@@ -1965,9 +2100,17 @@ spec:
                           RFC 4648 base64 to either encrypt or decrypt this resource.
                         type: string
                     type: object
+                  sourceStorageObject:
+                    description: |-
+                      The full Google Cloud Storage URI where the disk image is stored.
+                      This file must be a gzip-compressed tarball whose name ends in .tar.gz or virtual machine disk whose name ends in vmdk.
+                      Valid URIs may start with gs:// or https://storage.googleapis.com/.
+                      This flag is not optimized for creating multiple disks from a source storage object.
+                      To create many disks from a source storage object, use gcloud compute images import instead.
+                    type: string
                   storagePool:
                     description: |-
-                      The URL of the storage pool in which the new disk is created.
+                      The URL or the name of the storage pool in which the new disk is created.
                       For example:
                     type: string
                   type:
@@ -2042,93 +2185,12 @@ spec:
                 required:
                 - name
                 type: object
-              publishConnectionDetailsTo:
-                description: |-
-                  PublishConnectionDetailsTo specifies the connection secret config which
-                  contains a name, metadata and a reference to secret store config to
-                  which any connection details for this managed resource should be written.
-                  Connection details frequently include the endpoint, username,
-                  and password required to connect to the managed resource.
-                properties:
-                  configRef:
-                    default:
-                      name: default
-                    description: |-
-                      SecretStoreConfigRef specifies which secret store config should be used
-                      for this ConnectionSecret.
-                    properties:
-                      name:
-                        description: Name of the referenced object.
-                        type: string
-                      policy:
-                        description: Policies for referencing.
-                        properties:
-                          resolution:
-                            default: Required
-                            description: |-
-                              Resolution specifies whether resolution of this reference is required.
-                              The default is 'Required', which means the reconcile will fail if the
-                              reference cannot be resolved. 'Optional' means this reference will be
-                              a no-op if it cannot be resolved.
-                            enum:
-                            - Required
-                            - Optional
-                            type: string
-                          resolve:
-                            description: |-
-                              Resolve specifies when this reference should be resolved. The default
-                              is 'IfNotPresent', which will attempt to resolve the reference only when
-                              the corresponding field is not present. Use 'Always' to resolve the
-                              reference on every reconcile.
-                            enum:
-                            - Always
-                            - IfNotPresent
-                            type: string
-                        type: object
-                    required:
-                    - name
-                    type: object
-                  metadata:
-                    description: Metadata is the metadata for connection secret.
-                    properties:
-                      annotations:
-                        additionalProperties:
-                          type: string
-                        description: |-
-                          Annotations are the annotations to be added to connection secret.
-                          - For Kubernetes secrets, this will be used as "metadata.annotations".
-                          - It is up to Secret Store implementation for others store types.
-                        type: object
-                      labels:
-                        additionalProperties:
-                          type: string
-                        description: |-
-                          Labels are the labels/tags to be added to connection secret.
-                          - For Kubernetes secrets, this will be used as "metadata.labels".
-                          - It is up to Secret Store implementation for others store types.
-                        type: object
-                      type:
-                        description: |-
-                          Type is the SecretType for the connection secret.
-                          - Only valid for Kubernetes Secret Stores.
-                        type: string
-                    type: object
-                  name:
-                    description: Name is the name of the connection secret.
-                    type: string
-                required:
-                - name
-                type: object
               writeConnectionSecretToRef:
                 description: |-
                   WriteConnectionSecretToReference specifies the namespace and name of a
                   Secret to which any connection details for this managed resource should
                   be written. Connection details frequently include the endpoint, username,
                   and password required to connect to the managed resource.
-                  This field is planned to be replaced in a future release in favor of
-                  PublishConnectionDetailsTo. Currently, both could be set independently
-                  and connection details would be published to both without affecting
-                  each other.
                 properties:
                   name:
                     description: Name of the secret.
@@ -2150,18 +2212,32 @@ spec:
                 properties:
                   accessMode:
                     description: |-
-                      The accessMode of the disk.
+                      The access mode of the disk.
                       For example:
+                    type: string
+                  architecture:
+                    description: The architecture of the disk. Values include X86_64,
+                      ARM64.
                     type: string
                   asyncPrimaryDisk:
                     description: |-
-                      A nested object resource
+                      A nested object resource.
                       Structure is documented below.
                     properties:
                       disk:
                         description: Primary disk for asynchronous disk replication.
                         type: string
                     type: object
+                  createSnapshotBeforeDestroy:
+                    description: |-
+                      If set to true, a snapshot of the disk will be created before it is destroyed.
+                      If your disk is encrypted with customer managed encryption keys these will be reused for the snapshot creation.
+                      The name of the snapshot by default will be {{disk-name}}-YYYYMMDD-HHmm
+                    type: boolean
+                  createSnapshotBeforeDestroyPrefix:
+                    description: This will set a custom name prefix for the snapshot
+                      that's created when the disk is deleted.
+                    type: string
                   creationTimestamp:
                     description: Creation timestamp in RFC3339 text format.
                     type: string
@@ -2270,6 +2346,21 @@ spec:
                     items:
                       type: string
                     type: array
+                  params:
+                    description: |-
+                      Additional params passed with the request, but not persisted as part of resource payload
+                      Structure is documented below.
+                    properties:
+                      resourceManagerTags:
+                        additionalProperties:
+                          type: string
+                        description: |-
+                          Resource manager tags to be bound to the disk. Tag keys and values have the
+                          same definition as resource manager tags. Keys must be in the format tagKeys/{tag_key_id},
+                          and values are in the format tagValues/456.
+                        type: object
+                        x-kubernetes-map-type: granular
+                    type: object
                   physicalBlockSizeBytes:
                     description: |-
                       Physical block size of the persistent disk, in bytes. If not present
@@ -2367,6 +2458,19 @@ spec:
                       that was later deleted and recreated under the same name, the source
                       image ID would identify the exact version of the image that was used.
                     type: string
+                  sourceInstantSnapshot:
+                    description: |-
+                      The source instant snapshot used to create this disk. You can provide this as a partial or full URL to the resource.
+                      For example, the following are valid values:
+                    type: string
+                  sourceInstantSnapshotId:
+                    description: |-
+                      The unique ID of the instant snapshot used to create this disk. This value identifies
+                      the exact instant snapshot that was used to create this persistent disk.
+                      For example, if you created the persistent disk from an instant snapshot that was later
+                      deleted and recreated under the same name, the source instant snapshot ID would identify
+                      the exact version of the instant snapshot that was used.
+                    type: string
                   sourceSnapshotEncryptionKey:
                     description: |-
                       The customer-supplied encryption key of the source snapshot. Required
@@ -2408,9 +2512,17 @@ spec:
                       snapshot ID would identify the exact version of the snapshot that was
                       used.
                     type: string
+                  sourceStorageObject:
+                    description: |-
+                      The full Google Cloud Storage URI where the disk image is stored.
+                      This file must be a gzip-compressed tarball whose name ends in .tar.gz or virtual machine disk whose name ends in vmdk.
+                      Valid URIs may start with gs:// or https://storage.googleapis.com/.
+                      This flag is not optimized for creating multiple disks from a source storage object.
+                      To create many disks from a source storage object, use gcloud compute images import instead.
+                    type: string
                   storagePool:
                     description: |-
-                      The URL of the storage pool in which the new disk is created.
+                      The URL or the name of the storage pool in which the new disk is created.
                       For example:
                     type: string
                   terraformLabels:

@@ -9,6 +9,7 @@ metadata:
   annotations:
     meta.crossplane.io/maintainer: Upbound <support@upbound.io>
     meta.crossplane.io/source: github.com/crossplane-contrib/provider-upjet-{{ .ProviderName }}
+    meta.crossplane.io/license: Apache-2.0
     meta.crossplane.io/description: |
       Upbound's official Crossplane provider to manage Google Cloud Platform (GCP)
       {{ .Service }} services in Kubernetes.
@@ -31,6 +32,8 @@ spec:
 {{ if ne .Service "monolith" }}
   crossplane:
     version: ">=v1.12.1-0"
+  capabilities:
+    - SafeStart
 {{ end }}
 {{ if and (ne .Service "config") (ne .Service "monolith") }}
   dependsOn:

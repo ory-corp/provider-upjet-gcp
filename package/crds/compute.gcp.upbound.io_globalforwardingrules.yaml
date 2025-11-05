@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.18.0
   name: globalforwardingrules.compute.gcp.upbound.io
 spec:
   group: compute.gcp.upbound.io
@@ -78,6 +78,29 @@ spec:
                       An optional description of this resource. Provide this property when
                       you create the resource.
                     type: string
+                  externalManagedBackendBucketMigrationState:
+                    description: |-
+                      Specifies the canary migration state for the backend buckets attached to this forwarding rule.
+                      Possible values are PREPARE, TEST_BY_PERCENTAGE, and TEST_ALL_TRAFFIC.
+                      To begin the migration from EXTERNAL to EXTERNAL_MANAGED, the state must be changed to
+                      PREPARE. The state must be changed to TEST_ALL_TRAFFIC before the loadBalancingScheme can be
+                      changed to EXTERNAL_MANAGED. Optionally, the TEST_BY_PERCENTAGE state can be used to migrate
+                      traffic to backend buckets attached to this forwarding rule by percentage using
+                      externalManagedBackendBucketMigrationTestingPercentage.
+                      Rolling back a migration requires the states to be set in reverse order. So changing the
+                      scheme from EXTERNAL_MANAGED to EXTERNAL requires the state to be set to TEST_ALL_TRAFFIC at
+                      the same time. Optionally, the TEST_BY_PERCENTAGE state can be used to migrate some traffic
+                      back to EXTERNAL or PREPARE can be used to migrate all traffic back to EXTERNAL.
+                      Possible values are: PREPARE, TEST_BY_PERCENTAGE, TEST_ALL_TRAFFIC.
+                    type: string
+                  externalManagedBackendBucketMigrationTestingPercentage:
+                    description: |-
+                      Determines the fraction of requests to backend buckets that should be processed by the Global
+                      external Application Load Balancer.
+                      The value of this field must be in the range [0, 100].
+                      This value can only be set if the loadBalancingScheme in the forwarding rule is set to
+                      EXTERNAL (when using the Classic ALB) and the migration state is TEST_BY_PERCENTAGE.
+                    type: number
                   ipAddress:
                     description: |-
                       IP address for which this forwarding rule accepts traffic. When a client
@@ -339,6 +362,19 @@ spec:
                             type: string
                         type: object
                     type: object
+                  networkTier:
+                    description: |-
+                      This signifies the networking tier used for configuring
+                      this load balancer and can only take the following values:
+                      PREMIUM, STANDARD.
+                      For regional ForwardingRule, the valid values are PREMIUM and
+                      STANDARD. For GlobalForwardingRule, the valid value is
+                      PREMIUM.
+                      If this field is not specified, it is assumed to be PREMIUM.
+                      If IPAddress is specified, this value must be equal to the
+                      networkTier of the Address.
+                      Possible values are: PREMIUM, STANDARD.
+                    type: string
                   noAutomateDnsZone:
                     description: This is used in PSC consumer ForwardingRule to control
                       whether it should try to auto-generate a DNS zone or not. Non-PSC
@@ -645,6 +681,29 @@ spec:
                       An optional description of this resource. Provide this property when
                       you create the resource.
                     type: string
+                  externalManagedBackendBucketMigrationState:
+                    description: |-
+                      Specifies the canary migration state for the backend buckets attached to this forwarding rule.
+                      Possible values are PREPARE, TEST_BY_PERCENTAGE, and TEST_ALL_TRAFFIC.
+                      To begin the migration from EXTERNAL to EXTERNAL_MANAGED, the state must be changed to
+                      PREPARE. The state must be changed to TEST_ALL_TRAFFIC before the loadBalancingScheme can be
+                      changed to EXTERNAL_MANAGED. Optionally, the TEST_BY_PERCENTAGE state can be used to migrate
+                      traffic to backend buckets attached to this forwarding rule by percentage using
+                      externalManagedBackendBucketMigrationTestingPercentage.
+                      Rolling back a migration requires the states to be set in reverse order. So changing the
+                      scheme from EXTERNAL_MANAGED to EXTERNAL requires the state to be set to TEST_ALL_TRAFFIC at
+                      the same time. Optionally, the TEST_BY_PERCENTAGE state can be used to migrate some traffic
+                      back to EXTERNAL or PREPARE can be used to migrate all traffic back to EXTERNAL.
+                      Possible values are: PREPARE, TEST_BY_PERCENTAGE, TEST_ALL_TRAFFIC.
+                    type: string
+                  externalManagedBackendBucketMigrationTestingPercentage:
+                    description: |-
+                      Determines the fraction of requests to backend buckets that should be processed by the Global
+                      external Application Load Balancer.
+                      The value of this field must be in the range [0, 100].
+                      This value can only be set if the loadBalancingScheme in the forwarding rule is set to
+                      EXTERNAL (when using the Classic ALB) and the migration state is TEST_BY_PERCENTAGE.
+                    type: number
                   ipAddress:
                     description: |-
                       IP address for which this forwarding rule accepts traffic. When a client
@@ -906,6 +965,19 @@ spec:
                             type: string
                         type: object
                     type: object
+                  networkTier:
+                    description: |-
+                      This signifies the networking tier used for configuring
+                      this load balancer and can only take the following values:
+                      PREMIUM, STANDARD.
+                      For regional ForwardingRule, the valid values are PREMIUM and
+                      STANDARD. For GlobalForwardingRule, the valid value is
+                      PREMIUM.
+                      If this field is not specified, it is assumed to be PREMIUM.
+                      If IPAddress is specified, this value must be equal to the
+                      networkTier of the Address.
+                      Possible values are: PREMIUM, STANDARD.
+                    type: string
                   noAutomateDnsZone:
                     description: This is used in PSC consumer ForwardingRule to control
                       whether it should try to auto-generate a DNS zone or not. Non-PSC
@@ -1260,93 +1332,12 @@ spec:
                 required:
                 - name
                 type: object
-              publishConnectionDetailsTo:
-                description: |-
-                  PublishConnectionDetailsTo specifies the connection secret config which
-                  contains a name, metadata and a reference to secret store config to
-                  which any connection details for this managed resource should be written.
-                  Connection details frequently include the endpoint, username,
-                  and password required to connect to the managed resource.
-                properties:
-                  configRef:
-                    default:
-                      name: default
-                    description: |-
-                      SecretStoreConfigRef specifies which secret store config should be used
-                      for this ConnectionSecret.
-                    properties:
-                      name:
-                        description: Name of the referenced object.
-                        type: string
-                      policy:
-                        description: Policies for referencing.
-                        properties:
-                          resolution:
-                            default: Required
-                            description: |-
-                              Resolution specifies whether resolution of this reference is required.
-                              The default is 'Required', which means the reconcile will fail if the
-                              reference cannot be resolved. 'Optional' means this reference will be
-                              a no-op if it cannot be resolved.
-                            enum:
-                            - Required
-                            - Optional
-                            type: string
-                          resolve:
-                            description: |-
-                              Resolve specifies when this reference should be resolved. The default
-                              is 'IfNotPresent', which will attempt to resolve the reference only when
-                              the corresponding field is not present. Use 'Always' to resolve the
-                              reference on every reconcile.
-                            enum:
-                            - Always
-                            - IfNotPresent
-                            type: string
-                        type: object
-                    required:
-                    - name
-                    type: object
-                  metadata:
-                    description: Metadata is the metadata for connection secret.
-                    properties:
-                      annotations:
-                        additionalProperties:
-                          type: string
-                        description: |-
-                          Annotations are the annotations to be added to connection secret.
-                          - For Kubernetes secrets, this will be used as "metadata.annotations".
-                          - It is up to Secret Store implementation for others store types.
-                        type: object
-                      labels:
-                        additionalProperties:
-                          type: string
-                        description: |-
-                          Labels are the labels/tags to be added to connection secret.
-                          - For Kubernetes secrets, this will be used as "metadata.labels".
-                          - It is up to Secret Store implementation for others store types.
-                        type: object
-                      type:
-                        description: |-
-                          Type is the SecretType for the connection secret.
-                          - Only valid for Kubernetes Secret Stores.
-                        type: string
-                    type: object
-                  name:
-                    description: Name is the name of the connection secret.
-                    type: string
-                required:
-                - name
-                type: object
               writeConnectionSecretToRef:
                 description: |-
                   WriteConnectionSecretToReference specifies the namespace and name of a
                   Secret to which any connection details for this managed resource should
                   be written. Connection details frequently include the endpoint, username,
                   and password required to connect to the managed resource.
-                  This field is planned to be replaced in a future release in favor of
-                  PublishConnectionDetailsTo. Currently, both could be set independently
-                  and connection details would be published to both without affecting
-                  each other.
                 properties:
                   name:
                     description: Name of the secret.
@@ -1386,6 +1377,33 @@ spec:
                     description: for all of the labels present on the resource.
                     type: object
                     x-kubernetes-map-type: granular
+                  externalManagedBackendBucketMigrationState:
+                    description: |-
+                      Specifies the canary migration state for the backend buckets attached to this forwarding rule.
+                      Possible values are PREPARE, TEST_BY_PERCENTAGE, and TEST_ALL_TRAFFIC.
+                      To begin the migration from EXTERNAL to EXTERNAL_MANAGED, the state must be changed to
+                      PREPARE. The state must be changed to TEST_ALL_TRAFFIC before the loadBalancingScheme can be
+                      changed to EXTERNAL_MANAGED. Optionally, the TEST_BY_PERCENTAGE state can be used to migrate
+                      traffic to backend buckets attached to this forwarding rule by percentage using
+                      externalManagedBackendBucketMigrationTestingPercentage.
+                      Rolling back a migration requires the states to be set in reverse order. So changing the
+                      scheme from EXTERNAL_MANAGED to EXTERNAL requires the state to be set to TEST_ALL_TRAFFIC at
+                      the same time. Optionally, the TEST_BY_PERCENTAGE state can be used to migrate some traffic
+                      back to EXTERNAL or PREPARE can be used to migrate all traffic back to EXTERNAL.
+                      Possible values are: PREPARE, TEST_BY_PERCENTAGE, TEST_ALL_TRAFFIC.
+                    type: string
+                  externalManagedBackendBucketMigrationTestingPercentage:
+                    description: |-
+                      Determines the fraction of requests to backend buckets that should be processed by the Global
+                      external Application Load Balancer.
+                      The value of this field must be in the range [0, 100].
+                      This value can only be set if the loadBalancingScheme in the forwarding rule is set to
+                      EXTERNAL (when using the Classic ALB) and the migration state is TEST_BY_PERCENTAGE.
+                    type: number
+                  forwardingRuleId:
+                    description: The unique identifier number for the resource. This
+                      identifier is defined by the server.
+                    type: number
                   id:
                     description: an identifier for the resource with format projects/{{project}}/global/forwardingRules/{{name}}
                     type: string
@@ -1504,6 +1522,19 @@ spec:
                       be used.
                       For Private Service Connect forwarding rules that forward traffic to Google
                       APIs, a network must be provided.
+                    type: string
+                  networkTier:
+                    description: |-
+                      This signifies the networking tier used for configuring
+                      this load balancer and can only take the following values:
+                      PREMIUM, STANDARD.
+                      For regional ForwardingRule, the valid values are PREMIUM and
+                      STANDARD. For GlobalForwardingRule, the valid value is
+                      PREMIUM.
+                      If this field is not specified, it is assumed to be PREMIUM.
+                      If IPAddress is specified, this value must be equal to the
+                      networkTier of the Address.
+                      Possible values are: PREMIUM, STANDARD.
                     type: string
                   noAutomateDnsZone:
                     description: This is used in PSC consumer ForwardingRule to control
@@ -1707,6 +1738,29 @@ spec:
                       An optional description of this resource. Provide this property when
                       you create the resource.
                     type: string
+                  externalManagedBackendBucketMigrationState:
+                    description: |-
+                      Specifies the canary migration state for the backend buckets attached to this forwarding rule.
+                      Possible values are PREPARE, TEST_BY_PERCENTAGE, and TEST_ALL_TRAFFIC.
+                      To begin the migration from EXTERNAL to EXTERNAL_MANAGED, the state must be changed to
+                      PREPARE. The state must be changed to TEST_ALL_TRAFFIC before the loadBalancingScheme can be
+                      changed to EXTERNAL_MANAGED. Optionally, the TEST_BY_PERCENTAGE state can be used to migrate
+                      traffic to backend buckets attached to this forwarding rule by percentage using
+                      externalManagedBackendBucketMigrationTestingPercentage.
+                      Rolling back a migration requires the states to be set in reverse order. So changing the
+                      scheme from EXTERNAL_MANAGED to EXTERNAL requires the state to be set to TEST_ALL_TRAFFIC at
+                      the same time. Optionally, the TEST_BY_PERCENTAGE state can be used to migrate some traffic
+                      back to EXTERNAL or PREPARE can be used to migrate all traffic back to EXTERNAL.
+                      Possible values are: PREPARE, TEST_BY_PERCENTAGE, TEST_ALL_TRAFFIC.
+                    type: string
+                  externalManagedBackendBucketMigrationTestingPercentage:
+                    description: |-
+                      Determines the fraction of requests to backend buckets that should be processed by the Global
+                      external Application Load Balancer.
+                      The value of this field must be in the range [0, 100].
+                      This value can only be set if the loadBalancingScheme in the forwarding rule is set to
+                      EXTERNAL (when using the Classic ALB) and the migration state is TEST_BY_PERCENTAGE.
+                    type: number
                   ipAddress:
                     description: |-
                       IP address for which this forwarding rule accepts traffic. When a client
@@ -1968,6 +2022,19 @@ spec:
                             type: string
                         type: object
                     type: object
+                  networkTier:
+                    description: |-
+                      This signifies the networking tier used for configuring
+                      this load balancer and can only take the following values:
+                      PREMIUM, STANDARD.
+                      For regional ForwardingRule, the valid values are PREMIUM and
+                      STANDARD. For GlobalForwardingRule, the valid value is
+                      PREMIUM.
+                      If this field is not specified, it is assumed to be PREMIUM.
+                      If IPAddress is specified, this value must be equal to the
+                      networkTier of the Address.
+                      Possible values are: PREMIUM, STANDARD.
+                    type: string
                   noAutomateDnsZone:
                     description: This is used in PSC consumer ForwardingRule to control
                       whether it should try to auto-generate a DNS zone or not. Non-PSC
@@ -2272,6 +2339,29 @@ spec:
                       An optional description of this resource. Provide this property when
                       you create the resource.
                     type: string
+                  externalManagedBackendBucketMigrationState:
+                    description: |-
+                      Specifies the canary migration state for the backend buckets attached to this forwarding rule.
+                      Possible values are PREPARE, TEST_BY_PERCENTAGE, and TEST_ALL_TRAFFIC.
+                      To begin the migration from EXTERNAL to EXTERNAL_MANAGED, the state must be changed to
+                      PREPARE. The state must be changed to TEST_ALL_TRAFFIC before the loadBalancingScheme can be
+                      changed to EXTERNAL_MANAGED. Optionally, the TEST_BY_PERCENTAGE state can be used to migrate
+                      traffic to backend buckets attached to this forwarding rule by percentage using
+                      externalManagedBackendBucketMigrationTestingPercentage.
+                      Rolling back a migration requires the states to be set in reverse order. So changing the
+                      scheme from EXTERNAL_MANAGED to EXTERNAL requires the state to be set to TEST_ALL_TRAFFIC at
+                      the same time. Optionally, the TEST_BY_PERCENTAGE state can be used to migrate some traffic
+                      back to EXTERNAL or PREPARE can be used to migrate all traffic back to EXTERNAL.
+                      Possible values are: PREPARE, TEST_BY_PERCENTAGE, TEST_ALL_TRAFFIC.
+                    type: string
+                  externalManagedBackendBucketMigrationTestingPercentage:
+                    description: |-
+                      Determines the fraction of requests to backend buckets that should be processed by the Global
+                      external Application Load Balancer.
+                      The value of this field must be in the range [0, 100].
+                      This value can only be set if the loadBalancingScheme in the forwarding rule is set to
+                      EXTERNAL (when using the Classic ALB) and the migration state is TEST_BY_PERCENTAGE.
+                    type: number
                   ipAddress:
                     description: |-
                       IP address for which this forwarding rule accepts traffic. When a client
@@ -2533,6 +2623,19 @@ spec:
                             type: string
                         type: object
                     type: object
+                  networkTier:
+                    description: |-
+                      This signifies the networking tier used for configuring
+                      this load balancer and can only take the following values:
+                      PREMIUM, STANDARD.
+                      For regional ForwardingRule, the valid values are PREMIUM and
+                      STANDARD. For GlobalForwardingRule, the valid value is
+                      PREMIUM.
+                      If this field is not specified, it is assumed to be PREMIUM.
+                      If IPAddress is specified, this value must be equal to the
+                      networkTier of the Address.
+                      Possible values are: PREMIUM, STANDARD.
+                    type: string
                   noAutomateDnsZone:
                     description: This is used in PSC consumer ForwardingRule to control
                       whether it should try to auto-generate a DNS zone or not. Non-PSC
@@ -2885,93 +2988,12 @@ spec:
                 required:
                 - name
                 type: object
-              publishConnectionDetailsTo:
-                description: |-
-                  PublishConnectionDetailsTo specifies the connection secret config which
-                  contains a name, metadata and a reference to secret store config to
-                  which any connection details for this managed resource should be written.
-                  Connection details frequently include the endpoint, username,
-                  and password required to connect to the managed resource.
-                properties:
-                  configRef:
-                    default:
-                      name: default
-                    description: |-
-                      SecretStoreConfigRef specifies which secret store config should be used
-                      for this ConnectionSecret.
-                    properties:
-                      name:
-                        description: Name of the referenced object.
-                        type: string
-                      policy:
-                        description: Policies for referencing.
-                        properties:
-                          resolution:
-                            default: Required
-                            description: |-
-                              Resolution specifies whether resolution of this reference is required.
-                              The default is 'Required', which means the reconcile will fail if the
-                              reference cannot be resolved. 'Optional' means this reference will be
-                              a no-op if it cannot be resolved.
-                            enum:
-                            - Required
-                            - Optional
-                            type: string
-                          resolve:
-                            description: |-
-                              Resolve specifies when this reference should be resolved. The default
-                              is 'IfNotPresent', which will attempt to resolve the reference only when
-                              the corresponding field is not present. Use 'Always' to resolve the
-                              reference on every reconcile.
-                            enum:
-                            - Always
-                            - IfNotPresent
-                            type: string
-                        type: object
-                    required:
-                    - name
-                    type: object
-                  metadata:
-                    description: Metadata is the metadata for connection secret.
-                    properties:
-                      annotations:
-                        additionalProperties:
-                          type: string
-                        description: |-
-                          Annotations are the annotations to be added to connection secret.
-                          - For Kubernetes secrets, this will be used as "metadata.annotations".
-                          - It is up to Secret Store implementation for others store types.
-                        type: object
-                      labels:
-                        additionalProperties:
-                          type: string
-                        description: |-
-                          Labels are the labels/tags to be added to connection secret.
-                          - For Kubernetes secrets, this will be used as "metadata.labels".
-                          - It is up to Secret Store implementation for others store types.
-                        type: object
-                      type:
-                        description: |-
-                          Type is the SecretType for the connection secret.
-                          - Only valid for Kubernetes Secret Stores.
-                        type: string
-                    type: object
-                  name:
-                    description: Name is the name of the connection secret.
-                    type: string
-                required:
-                - name
-                type: object
               writeConnectionSecretToRef:
                 description: |-
                   WriteConnectionSecretToReference specifies the namespace and name of a
                   Secret to which any connection details for this managed resource should
                   be written. Connection details frequently include the endpoint, username,
                   and password required to connect to the managed resource.
-                  This field is planned to be replaced in a future release in favor of
-                  PublishConnectionDetailsTo. Currently, both could be set independently
-                  and connection details would be published to both without affecting
-                  each other.
                 properties:
                   name:
                     description: Name of the secret.
@@ -3011,6 +3033,33 @@ spec:
                     description: for all of the labels present on the resource.
                     type: object
                     x-kubernetes-map-type: granular
+                  externalManagedBackendBucketMigrationState:
+                    description: |-
+                      Specifies the canary migration state for the backend buckets attached to this forwarding rule.
+                      Possible values are PREPARE, TEST_BY_PERCENTAGE, and TEST_ALL_TRAFFIC.
+                      To begin the migration from EXTERNAL to EXTERNAL_MANAGED, the state must be changed to
+                      PREPARE. The state must be changed to TEST_ALL_TRAFFIC before the loadBalancingScheme can be
+                      changed to EXTERNAL_MANAGED. Optionally, the TEST_BY_PERCENTAGE state can be used to migrate
+                      traffic to backend buckets attached to this forwarding rule by percentage using
+                      externalManagedBackendBucketMigrationTestingPercentage.
+                      Rolling back a migration requires the states to be set in reverse order. So changing the
+                      scheme from EXTERNAL_MANAGED to EXTERNAL requires the state to be set to TEST_ALL_TRAFFIC at
+                      the same time. Optionally, the TEST_BY_PERCENTAGE state can be used to migrate some traffic
+                      back to EXTERNAL or PREPARE can be used to migrate all traffic back to EXTERNAL.
+                      Possible values are: PREPARE, TEST_BY_PERCENTAGE, TEST_ALL_TRAFFIC.
+                    type: string
+                  externalManagedBackendBucketMigrationTestingPercentage:
+                    description: |-
+                      Determines the fraction of requests to backend buckets that should be processed by the Global
+                      external Application Load Balancer.
+                      The value of this field must be in the range [0, 100].
+                      This value can only be set if the loadBalancingScheme in the forwarding rule is set to
+                      EXTERNAL (when using the Classic ALB) and the migration state is TEST_BY_PERCENTAGE.
+                    type: number
+                  forwardingRuleId:
+                    description: The unique identifier number for the resource. This
+                      identifier is defined by the server.
+                    type: number
                   id:
                     description: an identifier for the resource with format projects/{{project}}/global/forwardingRules/{{name}}
                     type: string
@@ -3129,6 +3178,19 @@ spec:
                       be used.
                       For Private Service Connect forwarding rules that forward traffic to Google
                       APIs, a network must be provided.
+                    type: string
+                  networkTier:
+                    description: |-
+                      This signifies the networking tier used for configuring
+                      this load balancer and can only take the following values:
+                      PREMIUM, STANDARD.
+                      For regional ForwardingRule, the valid values are PREMIUM and
+                      STANDARD. For GlobalForwardingRule, the valid value is
+                      PREMIUM.
+                      If this field is not specified, it is assumed to be PREMIUM.
+                      If IPAddress is specified, this value must be equal to the
+                      networkTier of the Address.
+                      Possible values are: PREMIUM, STANDARD.
                     type: string
                   noAutomateDnsZone:
                     description: This is used in PSC consumer ForwardingRule to control

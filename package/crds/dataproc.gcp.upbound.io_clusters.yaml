@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.18.0
   name: clusters.dataproc.gcp.upbound.io
 spec:
   group: dataproc.gcp.upbound.io
@@ -186,6 +186,9 @@ spec:
                                 type: string
                             type: object
                           type: array
+                        clusterTier:
+                          description: The tier of the cluster.
+                          type: string
                         dataprocMetricConfig:
                           description: |-
                             The Compute Engine accelerator (GPU) configuration for these instances. Can be specified multiple times.
@@ -244,6 +247,17 @@ spec:
                             instances, applicable to all instances in the cluster. Structure defined below.
                           items:
                             properties:
+                              confidentialInstanceConfig:
+                                description: Confidential Instance Config for clusters
+                                  using Confidential VMs
+                                items:
+                                  properties:
+                                    enableConfidentialCompute:
+                                      description: Defines whether the instance should
+                                        have confidential compute enabled.
+                                      type: boolean
+                                  type: object
+                                type: array
                               internalIpOnly:
                                 description: |-
                                   By default, clusters are not restricted to internal IP addresses,
@@ -631,6 +645,39 @@ spec:
                                             type: number
                                         type: object
                                       type: array
+                                    provisioningModelMix:
+                                      description: Defines how the Group selects the
+                                        provisioning model to ensure required reliability.
+                                      items:
+                                        properties:
+                                          standardCapacityBase:
+                                            description: The base capacity that will
+                                              always use Standard VMs to avoid risk
+                                              of more preemption than the minimum
+                                              capacity you need. Dataproc will create
+                                              only standard VMs until it reaches standardCapacityBase,
+                                              then it will start using standardCapacityPercentAboveBase
+                                              to mix Spot with Standard VMs. eg. If
+                                              15 instances are requested and standardCapacityBase
+                                              is 5, Dataproc will create 5 standard
+                                              VMs and then start mixing spot and standard
+                                              VMs for remaining 10 instances.
+                                            type: number
+                                          standardCapacityPercentAboveBase:
+                                            description: The percentage of target
+                                              capacity that should use Standard VM.
+                                              The remaining percentage will use Spot
+                                              VMs. The percentage applies only to
+                                              the capacity above standardCapacityBase.
+                                              eg. If 15 instances are requested and
+                                              standardCapacityBase is 5 and standardCapacityPercentAboveBase
+                                              is 30, Dataproc will create 5 standard
+                                              VMs and then start mixing spot and standard
+                                              VMs for remaining 10 instances. The
+                                              mix will be 30% standard and 70% spot.
+                                            type: number
+                                        type: object
+                                      type: array
                                   type: object
                                 type: array
                               numInstances:
@@ -650,8 +697,26 @@ spec:
                             below.
                           items:
                             properties:
+                              identityConfig:
+                                description: |-
+                                  Identity Configuration. At least one of identity_config
+                                  or kerberos_config is required.
+                                items:
+                                  properties:
+                                    userServiceAccountMapping:
+                                      additionalProperties:
+                                        type: string
+                                      description: |-
+                                        The end user to service account mappings
+                                        in a service account based multi-tenant cluster
+                                      type: object
+                                      x-kubernetes-map-type: granular
+                                  type: object
+                                type: array
                               kerberosConfig:
-                                description: Kerberos Configuration
+                                description: |-
+                                  Kerberos Configuration. At least one of identity_config
+                                  or kerberos_config is required.
                                 items:
                                   properties:
                                     crossRealmTrustAdminServer:
@@ -1227,6 +1292,9 @@ spec:
                                 type: string
                             type: object
                           type: array
+                        clusterTier:
+                          description: The tier of the cluster.
+                          type: string
                         dataprocMetricConfig:
                           description: |-
                             The Compute Engine accelerator (GPU) configuration for these instances. Can be specified multiple times.
@@ -1285,6 +1353,17 @@ spec:
                             instances, applicable to all instances in the cluster. Structure defined below.
                           items:
                             properties:
+                              confidentialInstanceConfig:
+                                description: Confidential Instance Config for clusters
+                                  using Confidential VMs
+                                items:
+                                  properties:
+                                    enableConfidentialCompute:
+                                      description: Defines whether the instance should
+                                        have confidential compute enabled.
+                                      type: boolean
+                                  type: object
+                                type: array
                               internalIpOnly:
                                 description: |-
                                   By default, clusters are not restricted to internal IP addresses,
@@ -1672,6 +1751,39 @@ spec:
                                             type: number
                                         type: object
                                       type: array
+                                    provisioningModelMix:
+                                      description: Defines how the Group selects the
+                                        provisioning model to ensure required reliability.
+                                      items:
+                                        properties:
+                                          standardCapacityBase:
+                                            description: The base capacity that will
+                                              always use Standard VMs to avoid risk
+                                              of more preemption than the minimum
+                                              capacity you need. Dataproc will create
+                                              only standard VMs until it reaches standardCapacityBase,
+                                              then it will start using standardCapacityPercentAboveBase
+                                              to mix Spot with Standard VMs. eg. If
+                                              15 instances are requested and standardCapacityBase
+                                              is 5, Dataproc will create 5 standard
+                                              VMs and then start mixing spot and standard
+                                              VMs for remaining 10 instances.
+                                            type: number
+                                          standardCapacityPercentAboveBase:
+                                            description: The percentage of target
+                                              capacity that should use Standard VM.
+                                              The remaining percentage will use Spot
+                                              VMs. The percentage applies only to
+                                              the capacity above standardCapacityBase.
+                                              eg. If 15 instances are requested and
+                                              standardCapacityBase is 5 and standardCapacityPercentAboveBase
+                                              is 30, Dataproc will create 5 standard
+                                              VMs and then start mixing spot and standard
+                                              VMs for remaining 10 instances. The
+                                              mix will be 30% standard and 70% spot.
+                                            type: number
+                                        type: object
+                                      type: array
                                   type: object
                                 type: array
                               numInstances:
@@ -1691,8 +1803,26 @@ spec:
                             below.
                           items:
                             properties:
+                              identityConfig:
+                                description: |-
+                                  Identity Configuration. At least one of identity_config
+                                  or kerberos_config is required.
+                                items:
+                                  properties:
+                                    userServiceAccountMapping:
+                                      additionalProperties:
+                                        type: string
+                                      description: |-
+                                        The end user to service account mappings
+                                        in a service account based multi-tenant cluster
+                                      type: object
+                                      x-kubernetes-map-type: granular
+                                  type: object
+                                type: array
                               kerberosConfig:
-                                description: Kerberos Configuration
+                                description: |-
+                                  Kerberos Configuration. At least one of identity_config
+                                  or kerberos_config is required.
                                 items:
                                   properties:
                                     crossRealmTrustAdminServer:
@@ -2208,93 +2338,12 @@ spec:
                 required:
                 - name
                 type: object
-              publishConnectionDetailsTo:
-                description: |-
-                  PublishConnectionDetailsTo specifies the connection secret config which
-                  contains a name, metadata and a reference to secret store config to
-                  which any connection details for this managed resource should be written.
-                  Connection details frequently include the endpoint, username,
-                  and password required to connect to the managed resource.
-                properties:
-                  configRef:
-                    default:
-                      name: default
-                    description: |-
-                      SecretStoreConfigRef specifies which secret store config should be used
-                      for this ConnectionSecret.
-                    properties:
-                      name:
-                        description: Name of the referenced object.
-                        type: string
-                      policy:
-                        description: Policies for referencing.
-                        properties:
-                          resolution:
-                            default: Required
-                            description: |-
-                              Resolution specifies whether resolution of this reference is required.
-                              The default is 'Required', which means the reconcile will fail if the
-                              reference cannot be resolved. 'Optional' means this reference will be
-                              a no-op if it cannot be resolved.
-                            enum:
-                            - Required
-                            - Optional
-                            type: string
-                          resolve:
-                            description: |-
-                              Resolve specifies when this reference should be resolved. The default
-                              is 'IfNotPresent', which will attempt to resolve the reference only when
-                              the corresponding field is not present. Use 'Always' to resolve the
-                              reference on every reconcile.
-                            enum:
-                            - Always
-                            - IfNotPresent
-                            type: string
-                        type: object
-                    required:
-                    - name
-                    type: object
-                  metadata:
-                    description: Metadata is the metadata for connection secret.
-                    properties:
-                      annotations:
-                        additionalProperties:
-                          type: string
-                        description: |-
-                          Annotations are the annotations to be added to connection secret.
-                          - For Kubernetes secrets, this will be used as "metadata.annotations".
-                          - It is up to Secret Store implementation for others store types.
-                        type: object
-                      labels:
-                        additionalProperties:
-                          type: string
-                        description: |-
-                          Labels are the labels/tags to be added to connection secret.
-                          - For Kubernetes secrets, this will be used as "metadata.labels".
-                          - It is up to Secret Store implementation for others store types.
-                        type: object
-                      type:
-                        description: |-
-                          Type is the SecretType for the connection secret.
-                          - Only valid for Kubernetes Secret Stores.
-                        type: string
-                    type: object
-                  name:
-                    description: Name is the name of the connection secret.
-                    type: string
-                required:
-                - name
-                type: object
               writeConnectionSecretToRef:
                 description: |-
                   WriteConnectionSecretToReference specifies the namespace and name of a
                   Secret to which any connection details for this managed resource should
                   be written. Connection details frequently include the endpoint, username,
                   and password required to connect to the managed resource.
-                  This field is planned to be replaced in a future release in favor of
-                  PublishConnectionDetailsTo. Currently, both could be set independently
-                  and connection details would be published to both without affecting
-                  each other.
                 properties:
                   name:
                     description: Name of the secret.
@@ -2450,6 +2499,9 @@ spec:
                             for the cluster. If staging_bucket is specified, it will contain this value, otherwise
                             it will be the auto generated name.
                           type: string
+                        clusterTier:
+                          description: The tier of the cluster.
+                          type: string
                         dataprocMetricConfig:
                           description: |-
                             The Compute Engine accelerator (GPU) configuration for these instances. Can be specified multiple times.
@@ -2516,6 +2568,17 @@ spec:
                             instances, applicable to all instances in the cluster. Structure defined below.
                           items:
                             properties:
+                              confidentialInstanceConfig:
+                                description: Confidential Instance Config for clusters
+                                  using Confidential VMs
+                                items:
+                                  properties:
+                                    enableConfidentialCompute:
+                                      description: Defines whether the instance should
+                                        have confidential compute enabled.
+                                      type: boolean
+                                  type: object
+                                type: array
                               internalIpOnly:
                                 description: |-
                                   By default, clusters are not restricted to internal IP addresses,
@@ -2850,6 +2913,39 @@ spec:
                                             type: number
                                         type: object
                                       type: array
+                                    provisioningModelMix:
+                                      description: Defines how the Group selects the
+                                        provisioning model to ensure required reliability.
+                                      items:
+                                        properties:
+                                          standardCapacityBase:
+                                            description: The base capacity that will
+                                              always use Standard VMs to avoid risk
+                                              of more preemption than the minimum
+                                              capacity you need. Dataproc will create
+                                              only standard VMs until it reaches standardCapacityBase,
+                                              then it will start using standardCapacityPercentAboveBase
+                                              to mix Spot with Standard VMs. eg. If
+                                              15 instances are requested and standardCapacityBase
+                                              is 5, Dataproc will create 5 standard
+                                              VMs and then start mixing spot and standard
+                                              VMs for remaining 10 instances.
+                                            type: number
+                                          standardCapacityPercentAboveBase:
+                                            description: The percentage of target
+                                              capacity that should use Standard VM.
+                                              The remaining percentage will use Spot
+                                              VMs. The percentage applies only to
+                                              the capacity above standardCapacityBase.
+                                              eg. If 15 instances are requested and
+                                              standardCapacityBase is 5 and standardCapacityPercentAboveBase
+                                              is 30, Dataproc will create 5 standard
+                                              VMs and then start mixing spot and standard
+                                              VMs for remaining 10 instances. The
+                                              mix will be 30% standard and 70% spot.
+                                            type: number
+                                        type: object
+                                      type: array
                                   type: object
                                 type: array
                               instanceNames:
@@ -2876,8 +2972,26 @@ spec:
                             below.
                           items:
                             properties:
+                              identityConfig:
+                                description: |-
+                                  Identity Configuration. At least one of identity_config
+                                  or kerberos_config is required.
+                                items:
+                                  properties:
+                                    userServiceAccountMapping:
+                                      additionalProperties:
+                                        type: string
+                                      description: |-
+                                        The end user to service account mappings
+                                        in a service account based multi-tenant cluster
+                                      type: object
+                                      x-kubernetes-map-type: granular
+                                  type: object
+                                type: array
                               kerberosConfig:
-                                description: Kerberos Configuration
+                                description: |-
+                                  Kerberos Configuration. At least one of identity_config
+                                  or kerberos_config is required.
                                 items:
                                   properties:
                                     crossRealmTrustAdminServer:
@@ -3581,6 +3695,9 @@ spec:
                               type: string
                           type: object
                         type: array
+                      clusterTier:
+                        description: The tier of the cluster.
+                        type: string
                       dataprocMetricConfig:
                         description: |-
                           The Compute Engine accelerator (GPU) configuration for these instances. Can be specified multiple times.
@@ -3632,6 +3749,15 @@ spec:
                           Common config settings for resources of Google Compute Engine cluster
                           instances, applicable to all instances in the cluster. Structure defined below.
                         properties:
+                          confidentialInstanceConfig:
+                            description: Confidential Instance Config for clusters
+                              using Confidential VMs
+                            properties:
+                              enableConfidentialCompute:
+                                description: Defines whether the instance should have
+                                  confidential compute enabled.
+                                type: boolean
+                            type: object
                           internalIpOnly:
                             description: |-
                               By default, clusters are not restricted to internal IP addresses,
@@ -3994,6 +4120,35 @@ spec:
                                       type: number
                                   type: object
                                 type: array
+                              provisioningModelMix:
+                                description: Defines how the Group selects the provisioning
+                                  model to ensure required reliability.
+                                properties:
+                                  standardCapacityBase:
+                                    description: The base capacity that will always
+                                      use Standard VMs to avoid risk of more preemption
+                                      than the minimum capacity you need. Dataproc
+                                      will create only standard VMs until it reaches
+                                      standardCapacityBase, then it will start using
+                                      standardCapacityPercentAboveBase to mix Spot
+                                      with Standard VMs. eg. If 15 instances are requested
+                                      and standardCapacityBase is 5, Dataproc will
+                                      create 5 standard VMs and then start mixing
+                                      spot and standard VMs for remaining 10 instances.
+                                    type: number
+                                  standardCapacityPercentAboveBase:
+                                    description: The percentage of target capacity
+                                      that should use Standard VM. The remaining percentage
+                                      will use Spot VMs. The percentage applies only
+                                      to the capacity above standardCapacityBase.
+                                      eg. If 15 instances are requested and standardCapacityBase
+                                      is 5 and standardCapacityPercentAboveBase is
+                                      30, Dataproc will create 5 standard VMs and
+                                      then start mixing spot and standard VMs for
+                                      remaining 10 instances. The mix will be 30%
+                                      standard and 70% spot.
+                                    type: number
+                                type: object
                             type: object
                           numInstances:
                             description: |-
@@ -4010,8 +4165,24 @@ spec:
                         description: Security related configuration. Structure defined
                           below.
                         properties:
+                          identityConfig:
+                            description: |-
+                              Identity Configuration. At least one of identity_config
+                              or kerberos_config is required.
+                            properties:
+                              userServiceAccountMapping:
+                                additionalProperties:
+                                  type: string
+                                description: |-
+                                  The end user to service account mappings
+                                  in a service account based multi-tenant cluster
+                                type: object
+                                x-kubernetes-map-type: granular
+                            type: object
                           kerberosConfig:
-                            description: Kerberos Configuration
+                            description: |-
+                              Kerberos Configuration. At least one of identity_config
+                              or kerberos_config is required.
                             properties:
                               crossRealmTrustAdminServer:
                                 description: |-
@@ -4546,6 +4717,9 @@ spec:
                               type: string
                           type: object
                         type: array
+                      clusterTier:
+                        description: The tier of the cluster.
+                        type: string
                       dataprocMetricConfig:
                         description: |-
                           The Compute Engine accelerator (GPU) configuration for these instances. Can be specified multiple times.
@@ -4597,6 +4771,15 @@ spec:
                           Common config settings for resources of Google Compute Engine cluster
                           instances, applicable to all instances in the cluster. Structure defined below.
                         properties:
+                          confidentialInstanceConfig:
+                            description: Confidential Instance Config for clusters
+                              using Confidential VMs
+                            properties:
+                              enableConfidentialCompute:
+                                description: Defines whether the instance should have
+                                  confidential compute enabled.
+                                type: boolean
+                            type: object
                           internalIpOnly:
                             description: |-
                               By default, clusters are not restricted to internal IP addresses,
@@ -4959,6 +5142,35 @@ spec:
                                       type: number
                                   type: object
                                 type: array
+                              provisioningModelMix:
+                                description: Defines how the Group selects the provisioning
+                                  model to ensure required reliability.
+                                properties:
+                                  standardCapacityBase:
+                                    description: The base capacity that will always
+                                      use Standard VMs to avoid risk of more preemption
+                                      than the minimum capacity you need. Dataproc
+                                      will create only standard VMs until it reaches
+                                      standardCapacityBase, then it will start using
+                                      standardCapacityPercentAboveBase to mix Spot
+                                      with Standard VMs. eg. If 15 instances are requested
+                                      and standardCapacityBase is 5, Dataproc will
+                                      create 5 standard VMs and then start mixing
+                                      spot and standard VMs for remaining 10 instances.
+                                    type: number
+                                  standardCapacityPercentAboveBase:
+                                    description: The percentage of target capacity
+                                      that should use Standard VM. The remaining percentage
+                                      will use Spot VMs. The percentage applies only
+                                      to the capacity above standardCapacityBase.
+                                      eg. If 15 instances are requested and standardCapacityBase
+                                      is 5 and standardCapacityPercentAboveBase is
+                                      30, Dataproc will create 5 standard VMs and
+                                      then start mixing spot and standard VMs for
+                                      remaining 10 instances. The mix will be 30%
+                                      standard and 70% spot.
+                                    type: number
+                                type: object
                             type: object
                           numInstances:
                             description: |-
@@ -4975,8 +5187,24 @@ spec:
                         description: Security related configuration. Structure defined
                           below.
                         properties:
+                          identityConfig:
+                            description: |-
+                              Identity Configuration. At least one of identity_config
+                              or kerberos_config is required.
+                            properties:
+                              userServiceAccountMapping:
+                                additionalProperties:
+                                  type: string
+                                description: |-
+                                  The end user to service account mappings
+                                  in a service account based multi-tenant cluster
+                                type: object
+                                x-kubernetes-map-type: granular
+                            type: object
                           kerberosConfig:
-                            description: Kerberos Configuration
+                            description: |-
+                              Kerberos Configuration. At least one of identity_config
+                              or kerberos_config is required.
                             properties:
                               crossRealmTrustAdminServer:
                                 description: |-
@@ -5458,93 +5686,12 @@ spec:
                 required:
                 - name
                 type: object
-              publishConnectionDetailsTo:
-                description: |-
-                  PublishConnectionDetailsTo specifies the connection secret config which
-                  contains a name, metadata and a reference to secret store config to
-                  which any connection details for this managed resource should be written.
-                  Connection details frequently include the endpoint, username,
-                  and password required to connect to the managed resource.
-                properties:
-                  configRef:
-                    default:
-                      name: default
-                    description: |-
-                      SecretStoreConfigRef specifies which secret store config should be used
-                      for this ConnectionSecret.
-                    properties:
-                      name:
-                        description: Name of the referenced object.
-                        type: string
-                      policy:
-                        description: Policies for referencing.
-                        properties:
-                          resolution:
-                            default: Required
-                            description: |-
-                              Resolution specifies whether resolution of this reference is required.
-                              The default is 'Required', which means the reconcile will fail if the
-                              reference cannot be resolved. 'Optional' means this reference will be
-                              a no-op if it cannot be resolved.
-                            enum:
-                            - Required
-                            - Optional
-                            type: string
-                          resolve:
-                            description: |-
-                              Resolve specifies when this reference should be resolved. The default
-                              is 'IfNotPresent', which will attempt to resolve the reference only when
-                              the corresponding field is not present. Use 'Always' to resolve the
-                              reference on every reconcile.
-                            enum:
-                            - Always
-                            - IfNotPresent
-                            type: string
-                        type: object
-                    required:
-                    - name
-                    type: object
-                  metadata:
-                    description: Metadata is the metadata for connection secret.
-                    properties:
-                      annotations:
-                        additionalProperties:
-                          type: string
-                        description: |-
-                          Annotations are the annotations to be added to connection secret.
-                          - For Kubernetes secrets, this will be used as "metadata.annotations".
-                          - It is up to Secret Store implementation for others store types.
-                        type: object
-                      labels:
-                        additionalProperties:
-                          type: string
-                        description: |-
-                          Labels are the labels/tags to be added to connection secret.
-                          - For Kubernetes secrets, this will be used as "metadata.labels".
-                          - It is up to Secret Store implementation for others store types.
-                        type: object
-                      type:
-                        description: |-
-                          Type is the SecretType for the connection secret.
-                          - Only valid for Kubernetes Secret Stores.
-                        type: string
-                    type: object
-                  name:
-                    description: Name is the name of the connection secret.
-                    type: string
-                required:
-                - name
-                type: object
               writeConnectionSecretToRef:
                 description: |-
                   WriteConnectionSecretToReference specifies the namespace and name of a
                   Secret to which any connection details for this managed resource should
                   be written. Connection details frequently include the endpoint, username,
                   and password required to connect to the managed resource.
-                  This field is planned to be replaced in a future release in favor of
-                  PublishConnectionDetailsTo. Currently, both could be set independently
-                  and connection details would be published to both without affecting
-                  each other.
                 properties:
                   name:
                     description: Name of the secret.
@@ -5693,6 +5840,9 @@ spec:
                           for the cluster. If staging_bucket is specified, it will contain this value, otherwise
                           it will be the auto generated name.
                         type: string
+                      clusterTier:
+                        description: The tier of the cluster.
+                        type: string
                       dataprocMetricConfig:
                         description: |-
                           The Compute Engine accelerator (GPU) configuration for these instances. Can be specified multiple times.
@@ -5752,6 +5902,15 @@ spec:
                           Common config settings for resources of Google Compute Engine cluster
                           instances, applicable to all instances in the cluster. Structure defined below.
                         properties:
+                          confidentialInstanceConfig:
+                            description: Confidential Instance Config for clusters
+                              using Confidential VMs
+                            properties:
+                              enableConfidentialCompute:
+                                description: Defines whether the instance should have
+                                  confidential compute enabled.
+                                type: boolean
+                            type: object
                           internalIpOnly:
                             description: |-
                               By default, clusters are not restricted to internal IP addresses,
@@ -6061,6 +6220,35 @@ spec:
                                       type: number
                                   type: object
                                 type: array
+                              provisioningModelMix:
+                                description: Defines how the Group selects the provisioning
+                                  model to ensure required reliability.
+                                properties:
+                                  standardCapacityBase:
+                                    description: The base capacity that will always
+                                      use Standard VMs to avoid risk of more preemption
+                                      than the minimum capacity you need. Dataproc
+                                      will create only standard VMs until it reaches
+                                      standardCapacityBase, then it will start using
+                                      standardCapacityPercentAboveBase to mix Spot
+                                      with Standard VMs. eg. If 15 instances are requested
+                                      and standardCapacityBase is 5, Dataproc will
+                                      create 5 standard VMs and then start mixing
+                                      spot and standard VMs for remaining 10 instances.
+                                    type: number
+                                  standardCapacityPercentAboveBase:
+                                    description: The percentage of target capacity
+                                      that should use Standard VM. The remaining percentage
+                                      will use Spot VMs. The percentage applies only
+                                      to the capacity above standardCapacityBase.
+                                      eg. If 15 instances are requested and standardCapacityBase
+                                      is 5 and standardCapacityPercentAboveBase is
+                                      30, Dataproc will create 5 standard VMs and
+                                      then start mixing spot and standard VMs for
+                                      remaining 10 instances. The mix will be 30%
+                                      standard and 70% spot.
+                                    type: number
+                                type: object
                             type: object
                           instanceNames:
                             description: |-
@@ -6084,8 +6272,24 @@ spec:
                         description: Security related configuration. Structure defined
                           below.
                         properties:
+                          identityConfig:
+                            description: |-
+                              Identity Configuration. At least one of identity_config
+                              or kerberos_config is required.
+                            properties:
+                              userServiceAccountMapping:
+                                additionalProperties:
+                                  type: string
+                                description: |-
+                                  The end user to service account mappings
+                                  in a service account based multi-tenant cluster
+                                type: object
+                                x-kubernetes-map-type: granular
+                            type: object
                           kerberosConfig:
-                            description: Kerberos Configuration
+                            description: |-
+                              Kerberos Configuration. At least one of identity_config
+                              or kerberos_config is required.
                             properties:
                               crossRealmTrustAdminServer:
                                 description: |-

@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.18.0
   name: metastoreservices.dataproc.gcp.upbound.io
 spec:
   group: dataproc.gcp.upbound.io
@@ -79,6 +79,10 @@ spec:
                       Default value is MYSQL.
                       Possible values are: MYSQL, SPANNER.
                     type: string
+                  deletionProtection:
+                    description: Indicates if the dataproc metastore should be protected
+                      against accidental deletions.
+                    type: boolean
                   encryptionConfig:
                     description: |-
                       Information used to configure the Dataproc Metastore service to encrypt
@@ -433,6 +437,36 @@ spec:
                       Structure is documented below.
                     items:
                       properties:
+                        autoscalingConfig:
+                          description: |-
+                            Represents the autoscaling configuration of a metastore service.
+                            Structure is documented below.
+                          items:
+                            properties:
+                              autoscalingEnabled:
+                                description: Defines whether autoscaling is enabled.
+                                  The default value is false.
+                                type: boolean
+                              limitConfig:
+                                description: |-
+                                  Represents the limit configuration of a metastore service.
+                                  Structure is documented below.
+                                items:
+                                  properties:
+                                    maxScalingFactor:
+                                      description: The maximum scaling factor that
+                                        the service will autoscale to. The default
+                                        value is 6.0.
+                                      type: number
+                                    minScalingFactor:
+                                      description: The minimum scaling factor that
+                                        the service will autoscale to. The default
+                                        value is 0.1.
+                                      type: number
+                                  type: object
+                                type: array
+                            type: object
+                          type: array
                         instanceSize:
                           description: |-
                             Metastore instance sizes.
@@ -515,6 +549,10 @@ spec:
                       Default value is MYSQL.
                       Possible values are: MYSQL, SPANNER.
                     type: string
+                  deletionProtection:
+                    description: Indicates if the dataproc metastore should be protected
+                      against accidental deletions.
+                    type: boolean
                   encryptionConfig:
                     description: |-
                       Information used to configure the Dataproc Metastore service to encrypt
@@ -864,6 +902,36 @@ spec:
                       Structure is documented below.
                     items:
                       properties:
+                        autoscalingConfig:
+                          description: |-
+                            Represents the autoscaling configuration of a metastore service.
+                            Structure is documented below.
+                          items:
+                            properties:
+                              autoscalingEnabled:
+                                description: Defines whether autoscaling is enabled.
+                                  The default value is false.
+                                type: boolean
+                              limitConfig:
+                                description: |-
+                                  Represents the limit configuration of a metastore service.
+                                  Structure is documented below.
+                                items:
+                                  properties:
+                                    maxScalingFactor:
+                                      description: The maximum scaling factor that
+                                        the service will autoscale to. The default
+                                        value is 6.0.
+                                      type: number
+                                    minScalingFactor:
+                                      description: The minimum scaling factor that
+                                        the service will autoscale to. The default
+                                        value is 0.1.
+                                      type: number
+                                  type: object
+                                type: array
+                            type: object
+                          type: array
                         instanceSize:
                           description: |-
                             Metastore instance sizes.
@@ -993,93 +1061,12 @@ spec:
                 required:
                 - name
                 type: object
-              publishConnectionDetailsTo:
-                description: |-
-                  PublishConnectionDetailsTo specifies the connection secret config which
-                  contains a name, metadata and a reference to secret store config to
-                  which any connection details for this managed resource should be written.
-                  Connection details frequently include the endpoint, username,
-                  and password required to connect to the managed resource.
-                properties:
-                  configRef:
-                    default:
-                      name: default
-                    description: |-
-                      SecretStoreConfigRef specifies which secret store config should be used
-                      for this ConnectionSecret.
-                    properties:
-                      name:
-                        description: Name of the referenced object.
-                        type: string
-                      policy:
-                        description: Policies for referencing.
-                        properties:
-                          resolution:
-                            default: Required
-                            description: |-
-                              Resolution specifies whether resolution of this reference is required.
-                              The default is 'Required', which means the reconcile will fail if the
-                              reference cannot be resolved. 'Optional' means this reference will be
-                              a no-op if it cannot be resolved.
-                            enum:
-                            - Required
-                            - Optional
-                            type: string
-                          resolve:
-                            description: |-
-                              Resolve specifies when this reference should be resolved. The default
-                              is 'IfNotPresent', which will attempt to resolve the reference only when
-                              the corresponding field is not present. Use 'Always' to resolve the
-                              reference on every reconcile.
-                            enum:
-                            - Always
-                            - IfNotPresent
-                            type: string
-                        type: object
-                    required:
-                    - name
-                    type: object
-                  metadata:
-                    description: Metadata is the metadata for connection secret.
-                    properties:
-                      annotations:
-                        additionalProperties:
-                          type: string
-                        description: |-
-                          Annotations are the annotations to be added to connection secret.
-                          - For Kubernetes secrets, this will be used as "metadata.annotations".
-                          - It is up to Secret Store implementation for others store types.
-                        type: object
-                      labels:
-                        additionalProperties:
-                          type: string
-                        description: |-
-                          Labels are the labels/tags to be added to connection secret.
-                          - For Kubernetes secrets, this will be used as "metadata.labels".
-                          - It is up to Secret Store implementation for others store types.
-                        type: object
-                      type:
-                        description: |-
-                          Type is the SecretType for the connection secret.
-                          - Only valid for Kubernetes Secret Stores.
-                        type: string
-                    type: object
-                  name:
-                    description: Name is the name of the connection secret.
-                    type: string
-                required:
-                - name
-                type: object
               writeConnectionSecretToRef:
                 description: |-
                   WriteConnectionSecretToReference specifies the namespace and name of a
                   Secret to which any connection details for this managed resource should
                   be written. Connection details frequently include the endpoint, username,
                   and password required to connect to the managed resource.
-                  This field is planned to be replaced in a future release in favor of
-                  PublishConnectionDetailsTo. Currently, both could be set independently
-                  and connection details would be published to both without affecting
-                  each other.
                 properties:
                   name:
                     description: Name of the secret.
@@ -1103,12 +1090,20 @@ spec:
                     description: A Cloud Storage URI (starting with gs://) that specifies
                       where artifacts related to the metastore service are stored.
                     type: string
+                  createTime:
+                    description: Output only. The time when the metastore service
+                      was created.
+                    type: string
                   databaseType:
                     description: |-
                       The database type that the Metastore service stores its data.
                       Default value is MYSQL.
                       Possible values are: MYSQL, SPANNER.
                     type: string
+                  deletionProtection:
+                    description: Indicates if the dataproc metastore should be protected
+                      against accidental deletions.
+                    type: boolean
                   effectiveLabels:
                     additionalProperties:
                       type: string
@@ -1330,6 +1325,41 @@ spec:
                       Structure is documented below.
                     items:
                       properties:
+                        autoscalingConfig:
+                          description: |-
+                            Represents the autoscaling configuration of a metastore service.
+                            Structure is documented below.
+                          items:
+                            properties:
+                              autoscalingEnabled:
+                                description: Defines whether autoscaling is enabled.
+                                  The default value is false.
+                                type: boolean
+                              autoscalingFactor:
+                                description: |-
+                                  (Output)
+                                  Output only. The scaling factor of a service with autoscaling enabled.
+                                type: number
+                              limitConfig:
+                                description: |-
+                                  Represents the limit configuration of a metastore service.
+                                  Structure is documented below.
+                                items:
+                                  properties:
+                                    maxScalingFactor:
+                                      description: The maximum scaling factor that
+                                        the service will autoscale to. The default
+                                        value is 6.0.
+                                      type: number
+                                    minScalingFactor:
+                                      description: The minimum scaling factor that
+                                        the service will autoscale to. The default
+                                        value is 0.1.
+                                      type: number
+                                  type: object
+                                type: array
+                            type: object
+                          type: array
                         instanceSize:
                           description: |-
                             Metastore instance sizes.
@@ -1410,6 +1440,10 @@ spec:
                   uid:
                     description: The globally unique resource identifier of the metastore
                       service.
+                    type: string
+                  updateTime:
+                    description: Output only. The time when the metastore service
+                      was last updated.
                     type: string
                 type: object
               conditions:
@@ -1534,6 +1568,10 @@ spec:
                       Default value is MYSQL.
                       Possible values are: MYSQL, SPANNER.
                     type: string
+                  deletionProtection:
+                    description: Indicates if the dataproc metastore should be protected
+                      against accidental deletions.
+                    type: boolean
                   encryptionConfig:
                     description: |-
                       Information used to configure the Dataproc Metastore service to encrypt
@@ -1868,6 +1906,30 @@ spec:
                       Represents the scaling configuration of a metastore service.
                       Structure is documented below.
                     properties:
+                      autoscalingConfig:
+                        description: |-
+                          Represents the autoscaling configuration of a metastore service.
+                          Structure is documented below.
+                        properties:
+                          autoscalingEnabled:
+                            description: Defines whether autoscaling is enabled. The
+                              default value is false.
+                            type: boolean
+                          limitConfig:
+                            description: |-
+                              Represents the limit configuration of a metastore service.
+                              Structure is documented below.
+                            properties:
+                              maxScalingFactor:
+                                description: The maximum scaling factor that the service
+                                  will autoscale to. The default value is 6.0.
+                                type: number
+                              minScalingFactor:
+                                description: The minimum scaling factor that the service
+                                  will autoscale to. The default value is 0.1.
+                                type: number
+                            type: object
+                        type: object
                       instanceSize:
                         description: |-
                           Metastore instance sizes.
@@ -1943,6 +2005,10 @@ spec:
                       Default value is MYSQL.
                       Possible values are: MYSQL, SPANNER.
                     type: string
+                  deletionProtection:
+                    description: Indicates if the dataproc metastore should be protected
+                      against accidental deletions.
+                    type: boolean
                   encryptionConfig:
                     description: |-
                       Information used to configure the Dataproc Metastore service to encrypt
@@ -2272,6 +2338,30 @@ spec:
                       Represents the scaling configuration of a metastore service.
                       Structure is documented below.
                     properties:
+                      autoscalingConfig:
+                        description: |-
+                          Represents the autoscaling configuration of a metastore service.
+                          Structure is documented below.
+                        properties:
+                          autoscalingEnabled:
+                            description: Defines whether autoscaling is enabled. The
+                              default value is false.
+                            type: boolean
+                          limitConfig:
+                            description: |-
+                              Represents the limit configuration of a metastore service.
+                              Structure is documented below.
+                            properties:
+                              maxScalingFactor:
+                                description: The maximum scaling factor that the service
+                                  will autoscale to. The default value is 6.0.
+                                type: number
+                              minScalingFactor:
+                                description: The minimum scaling factor that the service
+                                  will autoscale to. The default value is 0.1.
+                                type: number
+                            type: object
+                        type: object
                       instanceSize:
                         description: |-
                           Metastore instance sizes.
@@ -2394,93 +2484,12 @@ spec:
                 required:
                 - name
                 type: object
-              publishConnectionDetailsTo:
-                description: |-
-                  PublishConnectionDetailsTo specifies the connection secret config which
-                  contains a name, metadata and a reference to secret store config to
-                  which any connection details for this managed resource should be written.
-                  Connection details frequently include the endpoint, username,
-                  and password required to connect to the managed resource.
-                properties:
-                  configRef:
-                    default:
-                      name: default
-                    description: |-
-                      SecretStoreConfigRef specifies which secret store config should be used
-                      for this ConnectionSecret.
-                    properties:
-                      name:
-                        description: Name of the referenced object.
-                        type: string
-                      policy:
-                        description: Policies for referencing.
-                        properties:
-                          resolution:
-                            default: Required
-                            description: |-
-                              Resolution specifies whether resolution of this reference is required.
-                              The default is 'Required', which means the reconcile will fail if the
-                              reference cannot be resolved. 'Optional' means this reference will be
-                              a no-op if it cannot be resolved.
-                            enum:
-                            - Required
-                            - Optional
-                            type: string
-                          resolve:
-                            description: |-
-                              Resolve specifies when this reference should be resolved. The default
-                              is 'IfNotPresent', which will attempt to resolve the reference only when
-                              the corresponding field is not present. Use 'Always' to resolve the
-                              reference on every reconcile.
-                            enum:
-                            - Always
-                            - IfNotPresent
-                            type: string
-                        type: object
-                    required:
-                    - name
-                    type: object
-                  metadata:
-                    description: Metadata is the metadata for connection secret.
-                    properties:
-                      annotations:
-                        additionalProperties:
-                          type: string
-                        description: |-
-                          Annotations are the annotations to be added to connection secret.
-                          - For Kubernetes secrets, this will be used as "metadata.annotations".
-                          - It is up to Secret Store implementation for others store types.
-                        type: object
-                      labels:
-                        additionalProperties:
-                          type: string
-                        description: |-
-                          Labels are the labels/tags to be added to connection secret.
-                          - For Kubernetes secrets, this will be used as "metadata.labels".
-                          - It is up to Secret Store implementation for others store types.
-                        type: object
-                      type:
-                        description: |-
-                          Type is the SecretType for the connection secret.
-                          - Only valid for Kubernetes Secret Stores.
-                        type: string
-                    type: object
-                  name:
-                    description: Name is the name of the connection secret.
-                    type: string
-                required:
-                - name
-                type: object
               writeConnectionSecretToRef:
                 description: |-
                   WriteConnectionSecretToReference specifies the namespace and name of a
                   Secret to which any connection details for this managed resource should
                   be written. Connection details frequently include the endpoint, username,
                   and password required to connect to the managed resource.
-                  This field is planned to be replaced in a future release in favor of
-                  PublishConnectionDetailsTo. Currently, both could be set independently
-                  and connection details would be published to both without affecting
-                  each other.
                 properties:
                   name:
                     description: Name of the secret.
@@ -2504,12 +2513,20 @@ spec:
                     description: A Cloud Storage URI (starting with gs://) that specifies
                       where artifacts related to the metastore service are stored.
                     type: string
+                  createTime:
+                    description: Output only. The time when the metastore service
+                      was created.
+                    type: string
                   databaseType:
                     description: |-
                       The database type that the Metastore service stores its data.
                       Default value is MYSQL.
                       Possible values are: MYSQL, SPANNER.
                     type: string
+                  deletionProtection:
+                    description: Indicates if the dataproc metastore should be protected
+                      against accidental deletions.
+                    type: boolean
                   effectiveLabels:
                     additionalProperties:
                       type: string
@@ -2713,6 +2730,35 @@ spec:
                       Represents the scaling configuration of a metastore service.
                       Structure is documented below.
                     properties:
+                      autoscalingConfig:
+                        description: |-
+                          Represents the autoscaling configuration of a metastore service.
+                          Structure is documented below.
+                        properties:
+                          autoscalingEnabled:
+                            description: Defines whether autoscaling is enabled. The
+                              default value is false.
+                            type: boolean
+                          autoscalingFactor:
+                            description: |-
+                              (Output)
+                              Output only. The scaling factor of a service with autoscaling enabled.
+                            type: number
+                          limitConfig:
+                            description: |-
+                              Represents the limit configuration of a metastore service.
+                              Structure is documented below.
+                            properties:
+                              maxScalingFactor:
+                                description: The maximum scaling factor that the service
+                                  will autoscale to. The default value is 6.0.
+                                type: number
+                              minScalingFactor:
+                                description: The minimum scaling factor that the service
+                                  will autoscale to. The default value is 0.1.
+                                type: number
+                            type: object
+                        type: object
                       instanceSize:
                         description: |-
                           Metastore instance sizes.
@@ -2786,6 +2832,10 @@ spec:
                   uid:
                     description: The globally unique resource identifier of the metastore
                       service.
+                    type: string
+                  updateTime:
+                    description: Output only. The time when the metastore service
+                      was last updated.
                     type: string
                 type: object
               conditions:

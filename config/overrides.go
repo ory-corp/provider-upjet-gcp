@@ -8,8 +8,8 @@ import (
 	"regexp"
 	"strings"
 
-	tjconfig "github.com/crossplane/upjet/pkg/config"
-	"github.com/crossplane/upjet/pkg/types/name"
+	tjconfig "github.com/crossplane/upjet/v2/pkg/config"
+	"github.com/crossplane/upjet/v2/pkg/types/name"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 )
@@ -114,6 +114,8 @@ var groupMap = map[string]GroupKindCalculator{
 	"google_document_ai.+": ReplaceGroupWords("", 2),
 
 	"google_essential_contacts_contact$": ReplaceGroupWords("", 2),
+
+	"google_cloud_quotas.+$": ReplaceGroupWords("", 2),
 }
 
 // ReplaceGroupWords uses given group as the group of the resource and removes

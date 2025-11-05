@@ -4,7 +4,7 @@
 
 package config
 
-import "github.com/crossplane/upjet/pkg/config"
+import "github.com/crossplane/upjet/v2/pkg/config"
 
 // ExternalNameNotTestedConfigs contains no-tested configurations for this
 // provider.
@@ -373,13 +373,6 @@ var ExternalNameNotTestedConfigs = map[string]config.ExternalName{
 	"google_iam_workload_identity_pool": config.TemplatedStringAsIdentifier("workload_identity_pool_id", "projects/{{ .setup.configuration.project }}/locations/global/workloadIdentityPools/{{ .external_name }}"),
 	// Imported by using the following projects/{{project}}/locations/global/workloadIdentityPools/{{workload_identity_pool_id}}/providers/{{workload_identity_pool_provider_id}}
 	"google_iam_workload_identity_pool_provider": config.TemplatedStringAsIdentifier("workload_identity_pool_provider_id", "projects/{{ .setup.configuration.project }}/locations/global/workloadIdentityPools/{{ .parameters.workload_identity_pool_id }}/providers/{{ .external_name }}"),
-
-	// identityplatform
-	//
-	// Imported by using the following projects/{{project}}/config
-	"google_identity_platform_config": config.TemplatedStringAsIdentifier("", "projects/{{ .setup.configuration.project }}/config"),
-	// Imported by using the following projects/{{project}}/config/{{name}}
-	"google_identity_platform_project_default_config": config.IdentifierFromProvider,
 
 	// kms
 	//
